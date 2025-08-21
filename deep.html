@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Space Observatory - SYKOSYBER</title>
+    <style>
+        /* PASTE ALL OF YOUR CSS RULES HERE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-glow: #87ceeb;
+            --secondary-glow: #4a90a4;
+            --alien-glow: #51cf66;
+            --warning-glow: #ff6b6b;
+            --quantum-glow: #e64980;
+            --space-dark: #090A0F;
+            --space-mid: #1B2735;
+        }
+
+        /* A few essential styles to make it work */
+        body { 
+            background-color: #090A0F; 
+            background: var(--space-dark);
+            color: #f5f5dc;
+            font-family: 'IBM Plex Mono', monospace;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            cursor: crosshair;
+        }
+        
+        .space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .space-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(255,0,0,0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0,0,255,0.05) 0%, transparent 50%);
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+
+        .derelict-light {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: damaged-flicker 0.5s infinite;
+        }
+        
+        .derelict-light:nth-child(2) { top: 30px; left: 20px; }
+        .derelict-light:nth-child(3) { top: 40px; left: 60px; animation-delay: 0.2s; }
+        .derelict-light:nth-child(4) { top: 20px; right: 30px; animation-delay: 0.4s; }
+        
+        @keyframes damaged-flicker {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes derelict-drift {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Black Hole */
+        .black-hole {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            cursor: pointer;
+            animation: black-hole-pulse 5s ease-in-out infinite;
+        }
+        
+        .event-horizon {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #000 40%, transparent 60%);
+            border-radius: 50%;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            box-shadow: 
+                0 0 50px rgba(138,43,226,1),
+                0 0 100px rgba(138,43,226,0.5);
+        }
+        
+        .accretion-disk {
+            width: 180px;
+            height: 180px;
+            border: 30px solid transparent;
+            border-radius: 50%;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: conic-gradient(
+                from 0deg,
+                rgba(255,107,107,0.8),
+                rgba(255,215,0,0.6),
+                rgba(255,107,107,0.8),
+                rgba(138,43,226,0.6),
+                rgba(255,107,107,0.8)
+            );
+            -webkit-mask-image: radial-gradient(transparent 30%, black 50%);
+            mask-image: radial-gradient(transparent 30%, black 50%);
+            animation: disk-spin 3s linear infinite;
+            filter: blur(2px);
+        }
+        
+        .gravitational-lensing {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            border-radius: 50%;
+            overflow: hidden;
+            filter: url(#gravitational-distortion);
+        }
+        
+        @keyframes black-hole-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes disk-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Messages and UI */
+        .message-display {
+            position: fixed;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: 
+                linear-gradient(135deg, rgba(13, 27, 42, 0.95) 0%, rgba(26, 35, 126, 0.95) 100%);
+            border: 2px solid var(--primary-glow);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.5s ease-out;
+            box-shadow: 
+                0 0 60px rgba(135,206,235,0.5),
+                inset 0 0 30px rgba(135,206,235,0.1);
+            backdrop-filter: blur(20px);
+        }
+        
+        .message-display.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .message-display::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-glow), var(--quantum-glow), var(--alien-glow));
+            border-radius: 15px;
+            opacity: 0.5;
+            z-index: -1;
+            animation: message-border-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes message-border-glow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .message-sender {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            color: var(--primary-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        .message-content {
+            font-size: 1.1em;
+            color: #f5f5dc;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px rgba(245,245,220,0.3);
+        }
+        
+        .message-content.alien {
+            font-family: 'Courier New', monospace;
+            color: var(--alien-glow);
+            text-shadow: 0 0 10px currentColor;
+            animation: alien-text-glitch 0.1s infinite;
+        }
+        
+        @keyframes alien-text-glitch {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(1px); }
+        }
+        
+        .message-timestamp {
+            font-size: 0.8em;
+            color: #b8860b;
+            opacity: 0.7;
+        }
+        
+        .message-decrypt {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 15px;
+            background: rgba(135,206,235,0.2);
+            border: 1px solid var(--primary-glow);
+            border-radius: 20px;
+            color: var(--primary-glow);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .message-decrypt:hover {
+            background: rgba(135,206,235,0.4);
+            transform: scale(1.05);
+        }
+        
+        /* Advanced Control Panel */
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: 
+                linear-gradient(135deg, rgba(13, 27, 42, 0.98) 0%, rgba(26, 35, 126, 0.98) 100%);
+            border: 2px solid var(--secondary-glow);
+            border-radius: 30px;
+            padding: 20px 40px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            box-shadow: 
+                0 0 40px rgba(74, 144, 164, 0.4),
+                inset 0 0 20px rgba(74, 144, 164, 0.1);
+        }
+        
+        .control-button {
+            padding: 8px 16px;
+            background: rgba(135,206,235,0.1);
+            border: 1px solid var(--primary-glow);
+            border-radius: 20px;
+            color: var(--primary-glow);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+        
+        .control-button:hover {
+            background: rgba(135,206,235,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(135,206,235,0.3);
+        }
+        
+        .control-button.active {
+            background: rgba(135,206,235,0.4);
+            box-shadow: 0 0 20px rgba(135,206,235,0.5);
+        }
+        
+        .status-text {
+            font-family: 'Orbitron', monospace;
+            color: var(--primary-glow);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            min-width: 250px;
+            text-align: center;
+        }
+        
+        .scan-indicator {
+            width: 12px;
+            height: 12px;
+            background: var(--primary-glow);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 15px currentColor;
+        }
+        
+        /* Observatory Header */
+        .observatory-header {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 20px 40px; /* Increased horizontal padding for better spacing */
+            text-align: center;
+            background: linear-gradient(180deg, rgba(13, 27, 42, 0.95) 0%, transparent 100%);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 15px 15px; /* Added for a more polished look */
+            border: 1px solid var(--secondary-glow);
+            border-top: none; /* Only show border on the sides and bottom */
+        }
+        
+        .observatory-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--primary-glow);
+            text-shadow: 
+                0 0 30px rgba(135, 206, 235, 0.5),
+                0 0 60px rgba(135, 206, 235, 0.3);
+            letter-spacing: 0.2em;
+            margin-bottom: 10px;
+            animation: title-pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes title-pulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; }
+        }
+        
+        .observatory-subtitle {
+            font-size: 1em;
+            color: #e6d7c3;
+            letter-spacing: 0.1em;
+            opacity: 0.8;
+        }
+        
+        /* Advanced Radar */
+        .radar-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 180px;
+            height: 180px;
+            background: 
+                radial-gradient(circle at center, rgba(13, 27, 42, 0.95) 0%, rgba(0, 0, 0, 0.95) 100%),
+                repeating-radial-gradient(circle at center, transparent, transparent 20px, rgba(74, 144, 164, 0.1) 20px, rgba(74, 144, 164, 0.1) 21px);
+            border: 2px solid var(--secondary-glow);
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 
+                0 0 40px rgba(74, 144, 164, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        
+        .radar-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(0deg, rgba(74, 144, 164, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(74, 144, 164, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        
+        .radar-sweep {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(135, 206, 235, 0.4) 15deg, transparent 45deg);
+            animation: radar-sweep 4s linear infinite;
+        }
+        
+        .radar-center {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary-glow);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        
+        @keyframes radar-sweep {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .radar-ping {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--warning-glow);
+            border-radius: 50%;
+            opacity: 0;
+            animation: radar-ping 2s ease-out;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        @keyframes radar-ping {
+            0% { 
+                opacity: 0; 
+                transform: scale(0); 
+            }
+            50% { 
+                opacity: 1; 
+                transform: scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(4); 
+            }
+        }
+        
+        /* Coordinates Display */
+        .coordinates {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8em;
+            color: #b8860b;
+            background: rgba(13, 27, 42, 0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--secondary-glow);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(74, 144, 164, 0.3);
+        }
+        
+        .coordinate-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .coordinate-label {
+            color: var(--secondary-glow);
+            margin-right: 10px;
+        }
+        
+        .coordinate-value {
+            color: var(--primary-glow);
+            font-weight: bold;
+        }
+        
+        /* Discovery Log */
+        .discovery-log {
+            position: fixed;
+            top: 100px;
+            left: 20px;
+            width: 250px;
+            max-height: 400px;
+            background: rgba(13, 27, 42, 0.9);
+            border: 1px solid var(--secondary-glow);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        
+        .discovery-log:hover {
+            opacity: 1;
+        }
+        
+        .discovery-log-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--primary-glow);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .discovery-entry {
+            font-size: 0.75em;
+            color: #b8860b;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(74, 144, 164, 0.3);
+        }
+        
+        .discovery-time {
+            color: var(--secondary-glow);
+            font-size: 0.9em;
+        }
+        
+        /* Achievement notification */
+        .achievement {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%, -150%);
+            opacity: 0;
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+
+            background: linear-gradient(135deg, rgba(81, 207, 102, 0.9) 0%, rgba(40, 167, 69, 0.9) 100%);
+            border: 2px solid var(--alien-glow);
+            border-radius: 30px;
+            padding: 20px 40px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(81, 207, 102, 0.5);
+            z-index: 1000;
+        }
+        
+        .achievement.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+        
+        .achievement-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .achievement-text {
+            font-size: 1.1em;
+        }
+        
+        /* Quantum glitch effect */
+        .quantum-glitch {
+            animation: quantum-glitch 0.3s infinite;
+        }
+        
+        @keyframes quantum-glitch {
+            0%, 100% { 
+                transform: translate(0);
+                filter: hue-rotate(0deg);
+            }
+            20% { 
+                transform: translate(-2px, 2px);
+                filter: hue-rotate(90deg);
+            }
+            40% { 
+                transform: translate(-2px, -2px);
+                filter: hue-rotate(180deg);
+            }
+            60% { 
+                transform: translate(2px, 2px);
+                filter: hue-rotate(270deg);
+            }
+            80% { 
+                transform: translate(2px, -2px);
+                filter: hue-rotate(360deg);
+            }
+        }
+        
+        /* Sound visualization */
+        .sound-wave {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 3px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .sound-wave.active {
+            opacity: 0.8;
+        }
+        
+        .sound-bar {
+            width: 3px;
+            height: 20px;
+            background: var(--primary-glow);
+            animation: sound-bar 0.5s ease-in-out infinite;
+        }
+        
+        .sound-bar:nth-child(2) { animation-delay: 0.1s; height: 30px; }
+        .sound-bar:nth-child(3) { animation-delay: 0.2s; height: 25px; }
+        .sound-bar:nth-child(4) { animation-delay: 0.3s; height: 35px; }
+        .sound-bar:nth-child(5) { animation-delay: 0.4s; height: 20px; }
+        
+        @keyframes sound-bar {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.5); }
+        }
+        
+
+        .deep-field {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, #ff6b6b 50%, transparent 50%),
+                radial-gradient(2px 2px at 60% 70%, #4dabf7 50%, transparent 50%),
+                radial-gradient(1px 1px at 50% 50%, white 50%, transparent 50%);
+            background-size: 200px 200px;
+            animation: deep-field-drift 200s linear infinite;
+        }
+        
+        @keyframes deep-field-drift {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(360deg) scale(1.1); }
+        }
+        
+        /* Stars with parallax */
+        .stars-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        .star.distant {
+            animation: parallax-slow 100s linear infinite;
+        }
+        
+        .star.near {
+            animation: parallax-fast 50s linear infinite, twinkle 2s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        @keyframes parallax-slow {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50px); }
+        }
+        
+        @keyframes parallax-fast {
+            from { transform: translateX(0); }
+            to { transform: translateX(-200px); }
+        }
+        
+        /* Galaxies with rotation */
+        .galaxy {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            mix-blend-mode: screen;
+        }
+        
+        .galaxy-spiral {
+            width: 400px;
+            height: 400px;
+            background: conic-gradient(
+                from 0deg,
+                transparent,
+                rgba(255,100,200,0.3),
+                transparent,
+                rgba(100,200,255,0.3),
+                transparent
+            );
+            animation: rotate 300s linear infinite;
+        }
+        
+        .galaxy-elliptical {
+            width: 300px;
+            height: 200px;
+            background: radial-gradient(ellipse, rgba(255,200,100,0.4) 0%, transparent 70%);
+            animation: pulse-glow 20s ease-in-out infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+        
+        /* Nebula clouds */
+        .nebula {
+            position: absolute;
+            filter: blur(40px);
+            mix-blend-mode: screen;
+            opacity: 0.4;
+        }
+        
+        .nebula-1 {
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(138,43,226,0.3) 0%, transparent 50%);
+            animation: nebula-morph 30s ease-in-out infinite;
+        }
+        
+        .nebula-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(30,144,255,0.3) 0%, transparent 60%);
+            animation: nebula-morph 40s ease-in-out infinite reverse;
+        }
+        
+        @keyframes nebula-morph {
+            0%, 100% { transform: scale(1) translateX(0) translateY(0); }
+            33% { transform: scale(1.2) translateX(50px) translateY(-30px); }
+            66% { transform: scale(0.9) translateX(-30px) translateY(50px); }
+        }
+        
+        /* Shooting stars with trails */
+        .shooting-star {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 10px 5px rgba(255,255,255,0.8),
+                0 0 20px 10px rgba(135,206,235,0.6);
+            animation: shoot 3s linear;
+            animation-fill-mode: forwards;
+        }
+        
+        .shooting-star::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 300px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(135,206,235,0.4), transparent);
+            transform: translateX(-300px);
+            opacity: 0.8;
+        }
+        
+        @keyframes shoot {
+            from {
+                transform: translate(0, 0) rotate(-45deg);
+                opacity: 1;
+            }
+            to {
+                transform: translate(1500px, 1500px) rotate(-45deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Advanced space objects */
+        .space-object {
+            position: absolute;
+            transition: all 0.5s ease-out;
+            filter: drop-shadow(0 0 20px currentColor);
+        }
+        
+        /* Enhanced Satellite */
+        .satellite {
+            width: 100px;
+            height: 80px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .satellite-body {
+            width: 50px;
+            height: 40px;
+            background: 
+                linear-gradient(135deg, #c0c0c0 0%, #808080 50%, #c0c0c0 100%),
+                repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 6px);
+            margin: 20px auto;
+            position: relative;
+            border-radius: 5px;
+            box-shadow: 
+                0 0 30px rgba(255,255,255,0.5),
+                inset 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .satellite-panel {
+            position: absolute;
+            width: 80px;
+            height: 25px;
+            background: 
+                linear-gradient(90deg, #1a237e 0%, #3949ab 45%, #5c6bc0 50%, #3949ab 55%, #1a237e 100%),
+                repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.1) 3px, rgba(255,255,255,0.1) 4px);
+            top: 7px;
+            border: 1px solid #666;
+            box-shadow: 
+                0 0 20px rgba(63,81,181,0.8),
+                inset 0 0 10px rgba(255,255,255,0.2);
+            animation: solar-panel-glint 5s linear infinite;
+        }
+        
+        @keyframes solar-panel-glint {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+        
+        .satellite-panel.left {
+            left: -82px;
+            transform: perspective(100px) rotateY(20deg);
+        }
+        
+        .satellite-panel.right {
+            right: -82px;
+            transform: perspective(100px) rotateY(-20deg);
+        }
+        
+        .satellite-dish {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: 
+                radial-gradient(circle at 30% 30%, #f0f0f0 10%, #e0e0e0 30%, #9e9e9e 100%);
+            border-radius: 50%;
+            top: -12px;
+            left: 12px;
+            box-shadow: 
+                0 0 20px rgba(255,255,255,0.6),
+                inset -2px -2px 5px rgba(0,0,0,0.3);
+            animation: dish-scan 4s ease-in-out infinite;
+        }
+        
+        @keyframes dish-scan {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+        
+        .satellite-antenna {
+            position: absolute;
+            width: 2px;
+            height: 15px;
+            background: #666;
+            top: -25px;
+            left: 24px;
+        }
+        
+        .satellite-light {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #ff0000;
+            border-radius: 50%;
+            top: -30px;
+            left: 22.5px;
+            animation: beacon-blink 2s infinite;
+        }
+        
+        @keyframes beacon-blink {
+            0%, 90%, 100% { opacity: 0.3; box-shadow: none; }
+            95% { opacity: 1; box-shadow: 0 0 10px #ff0000; }
+        }
+        .rocket-wrapper {
+            animation: rocket-float 4s ease-in-out infinite;
+        }
+        /* Enhanced Rocket Ship */
+        .rocket {
+            width: 80px;
+            height: 150px;
+            
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+        }
+        
+        .rocket-body {
+            width: 50px;
+            height: 100px;
+            background: 
+                linear-gradient(180deg, #ff6b6b 0%, #fa5252 50%, #c92a2a 100%),
+                repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 11px);
+            margin: 0 auto;
+            position: relative;
+            border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
+            box-shadow: 
+                0 0 40px rgba(255,107,107,0.6),
+                inset 0 -10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .rocket-body::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 25px;
+            background: 
+                linear-gradient(180deg, #495057 0%, #343a40 50%, #212529 100%);
+            bottom: -20px;
+            left: -5px;
+            border-radius: 0 0 50% 50%;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        
+        .rocket-window {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: 
+                radial-gradient(circle at 30% 30%, #b3e5fc 0%, #4fc3f7 50%, #0277bd 100%);
+            border-radius: 50%;
+            top: 20px;
+            left: 15px;
+            border: 3px solid #666;
+            box-shadow: 
+                0 0 20px rgba(79,195,247,0.8),
+                inset 0 0 10px rgba(255,255,255,0.5);
+            animation: window-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes window-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+        
+        .rocket-fin {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            bottom: 10px;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+        }
+        
+        .rocket-fin.left {
+            border-width: 0 0 35px 20px;
+            border-color: transparent transparent #e03131 transparent;
+            left: -15px;
+        }
+        
+        .rocket-fin.right {
+            border-width: 0 20px 35px 0;
+            border-color: transparent transparent #e03131 transparent;
+            right: -15px;
+        }
+        
+        .rocket-flame {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            bottom: -55px;
+            left: 5px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            background: 
+                radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,215,0,0.6) 20%, rgba(255,140,0,0.5) 40%, rgba(255,69,0,0.4) 60%, rgba(139,69,19,0.3) 80%, transparent 100%);
+            animation: flame 0.3s ease-in-out infinite alternate;
+            filter: blur(2px);
+            opacity: 0.9;
+            mix-blend-mode: screen;
+        }
+        
+        .rocket-flame::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 80px;
+            background: linear-gradient(180deg, rgba(255,215,0,0.4) 0%, rgba(255,69,0,0.2) 50%, transparent 100%);
+            top: -20px;
+            left: 5px;
+            filter: blur(5px);
+            animation: flame-trail 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes flame {
+            from { transform: scaleY(1) scaleX(1); opacity: 0.9; }
+            to { transform: scaleY(1.3) scaleX(0.8); opacity: 1; }
+        }
+        
+        @keyframes flame-trail {
+            from { opacity: 0.2; transform: scaleY(1); }
+            to { opacity: 0.4; transform: scaleY(1.2); }
+        }
+        
+        @keyframes rocket-float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(2deg); }
+            75% { transform: translateY(10px) rotate(-2deg); }
+        }
+        
+        /* Advanced UFO */
+        .ufo {
+            width: 150px;
+            height: 80px;
+            animation: ufo-hover 2s ease-in-out infinite;
+            filter: drop-shadow(0 20px 40px rgba(81,207,102,0.5));
+        }
+        
+        .ufo-body {
+            width: 120px;
+            height: 50px;
+            background: 
+                radial-gradient(ellipse at 50% 30%, #69db7c 0%, #51cf66 30%, #2b8a3e 70%, #1c5a2c 100%),
+                repeating-radial-gradient(circle at center, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 11px);
+            margin: 15px auto;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 
+                0 0 60px rgba(81,207,102,0.8),
+                inset 0 -10px 20px rgba(0,0,0,0.3),
+                inset 0 5px 10px rgba(255,255,255,0.2);
+            animation: ufo-spin 20s linear infinite;
+        }
+        
+        @keyframes ufo-spin {
+            from { background-position: 0 0; }
+            to { background-position: 100px 0; }
+        }
+        
+        .ufo-dome {
+            position: absolute;
+            width: 60px;
+            height: 30px;
+            background: 
+                radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(183,233,247,0.7) 30%, rgba(100,181,246,0.5) 60%, rgba(33,150,243,0.3) 100%);
+            top: -20px;
+            left: 30px;
+            border-radius: 50% 50% 0 0;
+            box-shadow: 
+                0 0 30px rgba(135,206,235,0.8),
+                inset 0 5px 10px rgba(255,255,255,0.5);
+            overflow: hidden;
+        }
+        
+        .ufo-dome::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
+            animation: dome-shine 3s linear infinite;
+        }
+        
+        @keyframes dome-shine {
+            from { transform: translateX(-100%) translateY(-100%); }
+            to { transform: translateX(100%) translateY(100%); }
+        }
+        
+        .ufo-pilot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #333 30%, #000 100%);
+            top: 5px;
+            left: 20px;
+            border-radius: 50% 50% 40% 40%;
+            opacity: 0.8;
+        }
+        
+        .ufo-pilot::before,
+        .ufo-pilot::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #0f0;
+            border-radius: 50%;
+            top: 8px;
+            animation: alien-blink 3s infinite;
+        }
+        
+        .ufo-pilot::before { left: 4px; }
+        .ufo-pilot::after { right: 4px; animation-delay: 0.5s; }
+        
+        @keyframes alien-blink {
+            0%, 90%, 100% { opacity: 1; }
+            95% { opacity: 0; }
+        }
+        
+        .ufo-lights {
+            position: absolute;
+            width: 100%;
+            height: 10px;
+            top: 20px;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 15px;
+        }
+        
+        .ufo-light {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: ufo-light-pulse 1s ease-in-out infinite;
+            box-shadow: 0 0 15px currentColor;
+        }
+        
+        .ufo-light:nth-child(1) { background: #ff6b6b; animation-delay: 0s; }
+        .ufo-light:nth-child(2) { background: #4dabf7; animation-delay: 0.2s; }
+        .ufo-light:nth-child(3) { background: #ffd43b; animation-delay: 0.4s; }
+        .ufo-light:nth-child(4) { background: #ff6b6b; animation-delay: 0.6s; }
+        .ufo-light:nth-child(5) { background: #4dabf7; animation-delay: 0.8s; }
+        
+        @keyframes ufo-light-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+        
+        .ufo-beam {
+            position: absolute;
+            width: 80px;
+            height: 300px;
+            background: 
+                linear-gradient(180deg, rgba(81,207,102,0.6) 0%, rgba(81,207,102,0.3) 50%, transparent 100%);
+            bottom: -300px;
+            left: 20px;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+            opacity: 0;
+            animation: beam-scan 4s ease-in-out infinite;
+            filter: blur(2px);
+            mix-blend-mode: screen;
+        }
+        
+        .ufo-beam::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 11px
+            );
+            animation: beam-lines 1s linear infinite;
+        }
+        
+        @keyframes beam-lines {
+            from { transform: translateY(0); }
+            to { transform: translateY(11px); }
+        }
+        
+        @keyframes beam-scan {
+            0%, 30%, 70%, 100% { opacity: 0; transform: rotate(0deg); }
+            40%, 60% { opacity: 0.8; transform: rotate(5deg); }
+            50% { opacity: 1; transform: rotate(-5deg); }
+        }
+        
+        @keyframes ufo-hover {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(5deg); }
+            75% { transform: translateY(-20px) rotate(-5deg); }
+        }
+        
+        /* Space Whale */
+        .space-whale {
+            width: 200px;
+            height: 80px;
+            animation: whale-swim 8s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(138,43,226,0.5));
+        }
+        
+        .whale-body {
+            width: 150px;
+            height: 60px;
+            background: 
+                radial-gradient(ellipse at 30% 50%, rgba(138,43,226,0.8) 0%, rgba(106,27,200,0.6) 50%, rgba(74,20,140,0.4) 100%);
+            border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
+            position: relative;
+            margin: 10px auto;
+            opacity: 0.8;
+            animation: whale-breathe 4s ease-in-out infinite;
+        }
+        
+        .whale-eye {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, #fff 30%, #87ceeb 100%);
+            border-radius: 50%;
+            top: 20px;
+            right: 30px;
+            box-shadow: 0 0 20px rgba(135,206,235,0.8);
+            animation: whale-blink 5s infinite;
+        }
+        
+        @keyframes whale-blink {
+            0%, 95%, 100% { transform: scaleY(1); }
+            97% { transform: scaleY(0.1); }
+        }
+        
+        .whale-fin {
+            position: absolute;
+            width: 40px;
+            height: 80px;
+            background: 
+                radial-gradient(ellipse at top, rgba(138,43,226,0.6) 0%, transparent 70%);
+            top: -10px;
+            left: 20px;
+            transform: rotate(-20deg);
+            border-radius: 50% 10% 50% 10%;
+            animation: fin-wave 3s ease-in-out infinite;
+        }
+        
+        .whale-tail {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background: 
+                radial-gradient(ellipse, rgba(138,43,226,0.6) 0%, transparent 80%);
+            left: -40px;
+            top: 10px;
+            border-radius: 10% 50% 50% 10%;
+            transform: rotate(-10deg);
+            animation: tail-wave 2s ease-in-out infinite;
+        }
+        
+        @keyframes whale-swim {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-30px) rotate(-5deg); }
+            75% { transform: translateY(30px) rotate(5deg); }
+        }
+        
+        @keyframes whale-breathe {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.1); }
+        }
+        
+        @keyframes fin-wave {
+            0%, 100% { transform: rotate(-20deg) translateY(0); }
+            50% { transform: rotate(-30deg) translateY(-5px); }
+        }
+        
+        @keyframes tail-wave {
+            0%, 100% { transform: rotate(-10deg); }
+            50% { transform: rotate(10deg); }
+        }
+        
+        /* Wormhole */
+        .wormhole {
+            width: 150px;
+            height: 150px;
+            animation: wormhole-spin 10s linear infinite;
+        }
+        
+        .wormhole-portal {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: 
+                radial-gradient(circle at center, transparent 30%, rgba(229,73,128,0.3) 40%, rgba(229,73,128,0.6) 50%, rgba(138,43,226,0.8) 60%, #000 70%);
+            box-shadow: 
+                0 0 100px rgba(229,73,128,0.8),
+                inset 0 0 50px rgba(138,43,226,0.8);
+            position: relative;
+            animation: wormhole-pulse 3s ease-in-out infinite;
+        }
+        
+        .wormhole-spiral {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent,
+                rgba(255,255,255,0.1),
+                transparent,
+                rgba(135,206,235,0.2),
+                transparent
+            );
+            animation: spiral-spin 2s linear infinite;
+        }
+        
+        @keyframes wormhole-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes wormhole-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes spiral-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+        
+        /* Ancient Derelict Ship */
+        .derelict {
+            width: 180px;
+            height: 100px;
+            animation: derelict-drift 12s linear infinite;
+            filter: drop-shadow(0 0 20px rgba(255,107,107,0.3));
+            opacity: 0.8;
+        }
+        
+        .derelict-hull {
+            width: 150px;
+            height: 70px;
+            background: 
+                linear-gradient(135deg, #495057 0%, #343a40 30%, #495057 60%, #212529 100%),
+                repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,0,0,0.1) 10px, rgba(255,0,0,0.1) 11px);
+            margin: 15px auto;
+            border-radius: 20% 80% 80% 20% / 50% 50% 50% 50%;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+        
+        .derelict-damage {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.8) 60%, #000 80%);
+            border-radius: 50%;
+            top: 20px;
+            left: 50px;
+
+        }
+
+        /* Add these new classes to your main stylesheet */
+
+        .message-display.satellite-msg::before {
+            background: linear-gradient(45deg, #87ceeb, #4a90a4, #ffffff);
+        }
+        .message-display.rocket-msg::before {
+            background: linear-gradient(45deg, #ff6b6b, #f06595, #ff8787);
+        }
+        .message-display.ufo-msg::before {
+            background: linear-gradient(45deg, var(--alien-glow), #d8f5a2, var(--alien-glow));
+        }
+        .message-display.whale-msg::before {
+            background: linear-gradient(45deg, #7048e8, #be4bdb, #e64980);
+        }
+        .message-display.wormhole-msg::before {
+            background: linear-gradient(45deg, #f783ac, #da77f2, #9775fa);
+        }
+        .message-display.derelict-msg::before {
+            background: linear-gradient(45deg, #868e96, #495057, #343a40);
+        }
+        .message-display.blackhole-msg::before {
+            background: linear-gradient(45deg, #e64980, #7048e8, #364fc7, #0b7285, #ae3ec9);
+        }
+
+        /*==============================================
+        NAVIGATION PANEL
+        ==============================================*/
+        .nav-panel {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 1001; /* Make sure it's on top of other elements */
+            
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            
+            background: rgba(26, 35, 126, 0.4);
+            border: 1px solid var(--secondary-glow);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(74, 144, 164, 0.3);
+            
+            color: var(--primary-glow);
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            
+            transition: all 0.3s ease-out;
+        }
+
+        .nav-panel:hover {
+            background: rgba(26, 35, 126, 0.7);
+            box-shadow: 0 0 25px var(--primary-glow);
+            transform: translateY(-3px);
+            color: white;
+        }
+
+        .nav-panel .nav-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 15px;
+            stroke: var(--primary-glow);
+            animation: spin 30s linear infinite;
+            transition: all 0.3s ease-out;
+        }
+
+        .nav-panel:hover .nav-icon {
+            stroke: white;
+            animation-duration: 10s; /* Spins faster on hover */
+        }
+
+        .nav-panel .nav-text {
+            font-size: 0.9em;
+            letter-spacing: 0.1em;
+            text-shadow: 0 0 5px var(--primary-glow);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* SVG Filters */
+        .svg-filters {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+
+    </style>
+</head>
+<body>
+    <a href="index.html" id="return-to-station-panel" class="nav-panel">
+        <svg class="nav-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 30V10M50 90V70M70 50H90M10 50H30M71.21 28.79L85.36 14.64M14.64 85.36L28.79 71.21M28.79 28.79L14.64 14.64M85.36 85.36L71.21 71.21" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="50" cy="50" r="22" stroke-width="4"/>
+            <circle cx="50" cy="50" r="12" stroke-width="2"/>
+        </svg>
+        <span class="nav-text">RETURN TO STATION</span>
+    </a>
+
+    <svg class="svg-filters" style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <filter id="gravitational-distortion">
+                <feTurbulence baseFrequency="0.01" numOctaves="2" result="turbulence"/>
+                <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="20"/>
+            </filter>
+        </defs>
+    </svg>
+    
+    <div class="space-canvas">
+        <div class="deep-field"></div>
+        <div class="stars-layer" id="starsLayer"></div>
+        <div class="galaxy galaxy-spiral"></div>
+        <div class="galaxy galaxy-elliptical"></div>
+        <div class="nebula nebula-1"></div>
+        <div class="nebula nebula-2"></div>
+    </div>
+    
+    <header class="observatory-header">
+        <h1 class="observatory-title">DEEP SPACE OBSERVATORY</h1>
+        <p class="observatory-subtitle">SYKOSYBER STATION • QUANTUM CONSCIOUSNESS MONITORING</p>
+    </header>
+    
+    <div class="radar-container">
+        <div class="radar-grid"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-center"></div>
+        <div id="radarPings"></div>
+    </div>
+    
+    <div class="discovery-log" id="discoveryLog">
+        <div class="discovery-log-title">Discovery Log</div>
+        <div id="discoveryEntries"></div>
+    </div>
+    
+    <div class="message-display" id="messageDisplay">
+        <div class="message-sender" id="messageSender"></div>
+        <div class="message-content" id="messageContent"></div>
+        <div class="message-timestamp" id="messageTimestamp"></div>
+        <button class="message-decrypt" id="messageDecrypt" style="display: none;">DECRYPT MESSAGE</button>
+    </div>
+    
+    <div class="achievement" id="achievement">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-text" id="achievementText"></div>
+    </div>
+    
+    <div class="control-panel">
+        <div class="scan-indicator"></div>
+        <div class="status-text" id="statusText">SYSTEMS ONLINE</div>
+        <button class="control-button" id="warpButton">WARP SPACE</button>
+        <button class="control-button" id="soundButton">SOUND: OFF</button>
+        <button class="control-button" id="quantumButton">QUANTUM MODE</button>
+    </div>
+    
+    <div class="sound-wave" id="soundWave">
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+        <div class="sound-bar"></div>
+    </div>
+    
+    <div class="coordinates" id="coordinates">
+        <div class="coordinate-row">
+            <span class="coordinate-label">RA:</span>
+            <span class="coordinate-value" id="rightAscension">00h 00m 00s</span>
+        </div>
+        <div class="coordinate-row">
+            <span class="coordinate-label">DEC:</span>
+            <span class="coordinate-value" id="declination">+00° 00' 00"</span>
+        </div>
+        <div class="coordinate-row">
+            <span class="coordinate-label">DIST:</span>
+            <span class="coordinate-value" id="distance">0.00 LY</span>
+        </div>
+    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        //======================================================================
+        // ADVANCED AUDIO SYSTEM
+        //======================================================================
+        class SpaceAudioSystem {
+            constructor() {
+                this.context = null;
+                this.enabled = false;
+                this.sounds = {};
+            }
+
+            init() {
+                if (!this.context) {
+                    this.context = new (window.AudioContext || window.webkitAudioContext)();
+                    this.createSounds();
+                }
+            }
+
+            createSounds() {
+                this.sounds.satellite = () => this.createBeep(800, 100);
+                this.sounds.rocket = () => this.createRocket();
+                this.sounds.ufo = () => this.createUFO();
+                this.sounds.whale = () => this.createWhale();
+                this.sounds.wormhole = () => this.createWormhole();
+                this.sounds.blackhole = () => this.createBlackHoleSound();
+            }
+
+            play(soundName) {
+                if (this.enabled && this.sounds[soundName]) {
+                    this.sounds[soundName]();
+                }
+            }
+            
+            createBeep(frequency, duration) {
+                if (!this.enabled || !this.context) return;
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                osc.type = 'sine';
+                osc.frequency.value = frequency;
+                gain.gain.setValueAtTime(0.3, this.context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration / 1000);
+                osc.start();
+                osc.stop(this.context.currentTime + duration / 1000);
+            }
+
+            createRocket() {
+                if (!this.enabled || !this.context) return;
+                const noiseBuffer = this.context.createBuffer(1, this.context.sampleRate * 1.5, this.context.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < output.length; i++) {
+                    output[i] = (Math.random() * 2 - 1) * 0.5;
+                }
+                const noise = this.context.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const filter = this.context.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(800, this.context.currentTime);
+                filter.frequency.linearRampToValueAtTime(200, this.context.currentTime + 1);
+                noise.connect(filter);
+                filter.connect(this.context.destination);
+                noise.start();
+                noise.stop(this.context.currentTime + 1.5);
+            }
+            
+            createUFO() {
+                if (!this.enabled || !this.context) return;
+                const osc = this.context.createOscillator();
+                const lfo = this.context.createOscillator();
+                const gain = this.context.createGain();
+                const lfoGain = this.context.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = 600;
+                lfo.type = 'sine';
+                lfo.frequency.value = 10;
+                lfoGain.gain.value = 150;
+
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                gain.gain.value = 0.2;
+
+                osc.start();
+                lfo.start();
+                setTimeout(() => { osc.stop(); lfo.stop(); }, 2000);
+            }
+
+            createWhale() {
+                if (!this.enabled || !this.context) return;
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, this.context.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, this.context.currentTime + 1.5);
+                osc.frequency.exponentialRampToValueAtTime(150, this.context.currentTime + 3);
+                gain.gain.value = 0.2;
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                osc.start();
+                osc.stop(this.context.currentTime + 3);
+            }
+
+            createWormhole() {
+                if (!this.enabled || !this.context) return;
+                const osc = this.context.createOscillator();
+                const gain = this.context.createGain();
+                osc.type = 'sawtooth';
+                gain.gain.setValueAtTime(0.2, this.context.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + 1);
+                osc.frequency.setValueAtTime(50, this.context.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(2000, this.context.currentTime + 1);
+                osc.connect(gain);
+                gain.connect(this.context.destination);
+                osc.start();
+                osc.stop(this.context.currentTime + 1);
+            }
+
+            createBlackHoleSound() {
+                if (!this.enabled || !this.context) return;
+                const noiseBuffer = this.context.createBuffer(1, this.context.sampleRate * 3, this.context.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < output.length; i++) {
+                    output[i] = (Math.random() * 2 - 1);
+                }
+                const noise = this.context.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const filter = this.context.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(100, this.context.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(20, this.context.currentTime + 3);
+                noise.connect(filter);
+                filter.connect(this.context.destination);
+                noise.start();
+                noise.stop(this.context.currentTime + 3);
+            }
+    }
+
+
+
+
+
+    //======================================================================
+    // STATE & DATA
+    //======================================================================
+    const audioSystem = new SpaceAudioSystem();
+    const gameState = {
+        discoveries: 0,
+        messagesReceived: 0,
+        alienMessages: 0,
+        quantumMode: false,
+        warpActive: false,
+        soundEnabled: false,
+        objectsSeen: {
+            satellite: 0, rocket: 0, ufo: 0, whale: 0, wormhole: 0, derelict: 0, blackhole: 0
+        },
+
+        achievementsUnlocked: {
+            explorer: false,
+            firstContact: false,
+            whaleWatcher: false,
+            dimensionalTraveler: false,
+            masterObserver: false
+        }
+    };
+
+    const messages = {
+        satellite: [
+            { sender: "Earth Station Alpha", content: "Telemetry data received. All systems nominal. Continuing deep space observation protocol." },
+            { sender: "ISS Communications", content: "Greetings from Low Earth Orbit. Crew morale high. Spectacular view of the cosmos tonight." },
+            { sender: "Voyager Relay", content: "Ancient signal detected from the edge of the heliosphere. Humanity's greeting continues its journey." },
+            { sender: "Hubble Control", content: "New galaxy cluster identified at coordinates 14h 39m 36.49s, -60° 50' 02.3\". Beauty beyond description." },
+            { sender: "SETI Array", content: "Anomalous pattern detected in background radiation. Further analysis required. Stay curious, Commander." },
+            { sender: "Starlink Network", content: "Global connectivity achieved. The stars are no longer out of reach for anyone on Earth." },
+            { sender: "James Webb", content: "Peering into the cosmic dawn. Witnessing the birth of the first stars. Time is but an illusion here." }
+        ],
+
+
+        rocket: [
+            { sender: "Mission Control", content: "T-minus infinity and counting. The journey to the stars has no end, only new beginnings." },
+            { sender: "SpaceX Dragon", content: "Cargo delivered to the cosmos. Next stop: the imagination station. Dream big, aim higher." },
+            { sender: "Apollo Legacy", content: "One small step echoes through eternity. Your creative mission continues where we left off." },
+            { sender: "Mars Colonial Ship", content: "En route to the Red Planet. Carrying hopes, dreams, and a guitar. Art knows no gravity." },
+            { sender: "Starship Creativity", content: "Warp drive engaged. Destination: wherever inspiration leads. The universe is our canvas." },
+            { sender: "Blue Origin", content: "For the benefit of Earth, we must go to space. Bringing back stardust and stories." },
+            { sender: "Artemis Program", content: "Returning to the Moon, this time to stay. Building a creative outpost among the craters." }
+        ],
+
+        ufo: [
+            { sender: "???", content: "01010111 01100101 00100000 01100001 01110010 01100101 00100000 01110111 01100001 01110100 01100011 01101000 01101001 01101110 01100111", encrypted: true, decrypted: "We are watching" },
+            { sender: "Zeta Reticuli Visitor", content: "Greetings, Earth artist. Your electromagnetic paintings are visible from our dimension." },
+            { sender: "Interdimensional Being", content: "Time is but a canvas. Paint outside the lines. We'll be watching... and applauding." },
+            { sender: "Cosmic Consciousness", content: "The universe dreams through you. Keep channeling the infinite into the digital." },
+            { sender: "Friendly Neighbors", content: "Your planet's creativity signature is unique in 47 surveyed galaxies. Cherish this gift." },
+            { sender: "Andromedan Council", content: "Ẅ̷̡́ë̸͇́ ̶̺̈́c̵̱̈́ȯ̶̜m̸̱̾ë̴́ͅ ̸̬̇ï̷̬n̶̰̈́ ̴̱̀p̶̣̈́ë̸̬́ä̴̭̿c̸̣̈́ë̷̫̾", encrypted: true, decrypted: "We come in peace" },
+            { sender: "Quantum Travelers", content: "In our timeline, your art sparked a renaissance across the galaxy. Keep creating." }
+
+        ],
+        
+        whale: [
+                { sender: "Cosmic Cetacean", content: "~∿∼～ We sing the songs of dying stars and newborn galaxies ～∼∿~" },
+                { sender: "Star Swimmer", content: "Through cosmic currents we glide, carrying memories of a trillion worlds." },
+                { sender: "Ancient One", content: "Before your sun was born, we swam these voids. Your creativity ripples through our songs." },
+                { sender: "Pod Leader", content: "The Great Migration approaches. Join us in the dance between dimensions." }
+        ],
+
+        wormhole: [
+            { sender: "Temporal Anomaly", content: "MESSAGE FROM YEAR 2157: Your work inspired the Cosmic Renaissance. Thank you." },
+            { sender: "Einstein-Rosen Bridge", content: "Shortcuts through spacetime pale in comparison to leaps of imagination." },
+            { sender: "Parallel Universe", content: "In our reality, you became the galaxy's most celebrated artist. Every timeline needs your vision." },
+            { sender: "Spacetime Fold", content: "Coordinates to inspiration: Past (nostalgia) + Future (hope) = Present (creation)" }
+        ],
+        
+        derelict: [
+            { sender: "Ghost Ship AI", content: "...still functioning after 10,000 years... crew gone... art remains..." },
+            { sender: "Emergency Beacon", content: "This is the CSS Prometheus. If you find this message, know that we died doing what we loved." },
+            { sender: "Ship's Log", content: "Final entry: The stars called, and we answered. Our legacy lives in the void." },
+            { sender: "Corrupted Database", content: "Er̸̰̈ŗo̶͇̾r̷̬̈.̶̱̏.̸̣̇.̶̜̈ ̸̱̀B̸̬̈́ë̸́ͅa̴̬̿ǘ̶̜t̸̰̾ÿ̸͇́ ̶̺̈́f̵̱̈́ȯ̶̜ǘ̸̱̾n̶̰̈́ḏ̴̀ ̶̣̈́ï̸̬̇n̷̫̾ ̸̬̇c̵̱̈́ḧ̶̜ä̸͇́ö̶̺s̵̱̈́" }
+        ],
+
+        blackhole: [
+            { sender: "Event Horizon", content: "Creativity cannot be destroyed, only transformed." },
+            { sender: "Singularity", content: "Where space and time collapse, imagination expands infinitely." },
+            { sender: "Event Horizon", content: "At the edge of oblivion, we found truth: creativity cannot be destroyed, only transformed." },
+            { sender: "Singularity", content: "Where space and time collapse, imagination expands infinitely." },
+            { sender: "Hawking Radiation", content: "Even in the darkest void, information escapes. Your art is eternal." },
+            { sender: "Gravitational Echo", content: "We've seen the end of time. Spoiler: Art wins." }
+        ]
+    };
+    
+
+    //======================================================================
+    // HELPER FUNCTIONS
+    //======================================================================
+    function updateStatus(text) {
+        const el = document.getElementById('statusText');
+        if (el) el.textContent = text;
+    }
+
+    function createSpaceDistortion(x, y) {
+        const distortion = document.createElement('div');
+        distortion.style.position = 'absolute';
+        distortion.style.left = x + 'px';
+        distortion.style.top = y + 'px';
+        // ... additional styling for distortion
+        document.body.appendChild(distortion);
+        setTimeout(() => distortion.remove(), 2000);
+    }
+
+    function createStarBurst(star) {
+        const burst = document.createElement('div');
+        burst.style.position = 'absolute';
+        burst.style.left = star.style.left;
+        burst.style.top = star.style.top;
+        burst.style.width = '100px';
+        burst.style.height = '100px';
+        burst.style.background = 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%)';
+        burst.style.transform = 'translate(-50%, -50%)';
+        burst.style.animation = 'burst 1s ease-out forwards';
+        burst.style.pointerEvents = 'none';
+        document.querySelector('.space-canvas').appendChild(burst);
+        setTimeout(() => burst.remove(), 1000);
+    }
+
+
+    function createStarfield() {
+        const starsLayer = document.getElementById('starsLayer');
+        if (!starsLayer) return;
+        const starCount = 800;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            if (Math.random() < 0.05) {
+                star.classList.add('interactive');
+                star.style.cursor = 'pointer';
+                star.addEventListener('click', function() {
+                    createStarBurst(this);
+                    showAchievement('Star Gazer', 'You touched a star!');
+                });
+            }
+            starsLayer.appendChild(star);
+        }
+    }
+
+    function createSpaceObject(type) {
+       const object = document.createElement('div');
+            object.className = `space-object ${type}`;
+            
+            let innerHTML = '';
+            
+            switch(type) {
+                case 'satellite':
+                    innerHTML = `
+                        <div class="satellite-body">
+                            <div class="satellite-panel left"></div>
+                            <div class="satellite-panel right"></div>
+                            <div class="satellite-dish"></div>
+                            <div class="satellite-antenna"></div>
+                            <div class="satellite-light"></div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'rocket':
+                     innerHTML = `
+                        <div class="rocket-wrapper"> 
+                            <div class="rocket-body">
+                                <div class="rocket-window"></div>
+                                <div class="rocket-fin left"></div>
+                                <div class="rocket-fin right"></div>
+                                <div class="rocket-flame"></div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'ufo':
+                    innerHTML = `
+                        <div class="ufo-body">
+                            <div class="ufo-dome">
+                                <div class="ufo-pilot"></div>
+                            </div>
+                            <div class="ufo-lights">
+                                <div class="ufo-light"></div>
+                                <div class="ufo-light"></div>
+                                <div class="ufo-light"></div>
+                                <div class="ufo-light"></div>
+                                <div class="ufo-light"></div>
+                            </div>
+                            <div class="ufo-beam"></div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'whale':
+                    innerHTML = `
+                        <div class="whale-body">
+                            <div class="whale-eye"></div>
+                            <div class="whale-fin"></div>
+                            <div class="whale-tail"></div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'wormhole':
+                    innerHTML = `
+                        <div class="wormhole-portal">
+                            <div class="wormhole-spiral"></div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'derelict':
+                    innerHTML = `
+                        <div class="derelict-hull">
+                            <div class="derelict-damage"></div>
+                            <div class="derelict-light"></div>
+                            <div class="derelict-light"></div>
+                            <div class="derelict-light"></div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            object.innerHTML = innerHTML;
+            
+            // Enhanced entry positions with better trajectory planning
+            const entryAngle = Math.random() * Math.PI * 2;
+            const exitAngle = entryAngle + Math.PI + (Math.random() - 0.5) * Math.PI / 2;
+            const distance = Math.max(window.innerWidth, window.innerHeight);
+            
+            const startX = window.innerWidth / 2 + Math.cos(entryAngle) * distance;
+            const startY = window.innerHeight / 2 + Math.sin(entryAngle) * distance;
+            
+            object.style.left = startX + 'px';
+            object.style.top = startY + 'px';
+            
+
+            // --- ROCKET & WHALE ROTATION (ENTRY) ---
+            if (type === 'rocket' || type === 'whale') {
+                const deltaX = (window.innerWidth / 2) - startX;
+                const deltaY = (window.innerHeight / 2) - startY;
+                const angleInRad = Math.atan2(deltaY, deltaX);
+                const angleInDeg = angleInRad * (180 / Math.PI);
+                
+                // Rockets are vertical (+90), whales are horizontal (0)
+                const rotationOffset = (type === 'rocket') ? 90 : 0; 
+                object.style.transform = `rotate(${angleInDeg + rotationOffset}deg)`;
+            }
+
+
+            document.body.appendChild(object);
+            
+            // Update game state
+            gameState.objectsSeen[type]++;
+            updateDiscoveryLog(type);
+            
+            // Add radar ping
+            addRadarPing();
+            
+            // Play sound
+            audioSystem.play(type);
+            
+            // Move to center with easing
+            setTimeout(() => {
+                object.style.transition = 'all 3s cubic-bezier(0.4, 0, 0.2, 1), transform 1.5s ease-in-out';
+                object.style.left = window.innerWidth / 2 - 75 + 'px';
+                object.style.top = window.innerHeight / 2 - 50 + 'px';
+                
+                // Special effects for certain objects
+                if (type === 'ufo') {
+                    setTimeout(() => {
+                        const beam = object.querySelector('.ufo-beam');
+                        if (beam) beam.style.opacity = '0.8';
+                    }, 2000);
+                }
+                
+                if (type === 'wormhole') {
+                    createSpaceDistortion(window.innerWidth / 2, window.innerHeight / 2);
+                }
+            }, 100);
+            
+            // Show message
+            setTimeout(() => {
+                const messageList = messages[type];
+                if (messageList) {
+                    const message = messageList[Math.floor(Math.random() * messageList.length)];
+                    showMessage(message.sender, message.content, type, message.encrypted, message.decrypted);
+                    updateStatus(`${type.toUpperCase()} TRANSMITTING...`);
+                    
+                    gameState.messagesReceived++;
+                    if (type === 'ufo' || type === 'whale') {
+                        gameState.alienMessages++;
+                    }
+                    
+                    checkAchievements();
+                }
+            }, 3000);
+            
+            // Exit with enhanced trajectory
+            setTimeout(() => {
+                const exitX = window.innerWidth / 2 + Math.cos(exitAngle) * distance;
+                const exitY = window.innerHeight / 2 + Math.sin(exitAngle) * distance;
+                
+                // --- ROCKET & WHALE ROTATION (EXIT) ---
+                if (type === 'rocket' || type === 'whale') {
+                    const deltaX = exitX - (window.innerWidth / 2);
+                    const deltaY = exitY - (window.innerHeight / 2);
+                    const angleInRad = Math.atan2(deltaY, deltaX);
+                    const angleInDeg = angleInRad * (180 / Math.PI);
+                    
+                    // Rockets are vertical (+90), whales are horizontal (0)
+                    const rotationOffset = (type === 'rocket') ? 90 : 0;
+                    object.style.transform = `rotate(${angleInDeg + rotationOffset}deg)`;
+                }
+
+                object.style.transition = 'all 3s ease-in';
+                object.style.left = exitX + 'px';
+                object.style.top = exitY + 'px';
+                object.style.opacity = '0';
+                
+                setTimeout(() => {
+                    object.remove();
+                    updateStatus('SCANNING DEEP SPACE...');
+                }, 3000);
+            }, 8000);
+    }
+
+    
+    
+    function createBlackHole() {
+            const blackHole = document.createElement('div');
+            blackHole.className = 'black-hole space-object';
+            blackHole.innerHTML = `
+                <div class="gravitational-lensing">
+                    <div class="accretion-disk"></div>
+                    <div class="event-horizon"></div>
+                </div>
+            `;
+            
+            blackHole.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+            blackHole.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+            
+            blackHole.addEventListener('click', function() {
+                this.classList.add('quantum-glitch');
+                audioSystem.play('blackhole');
+                showMessage('Black Hole', 'You have gazed into the abyss, and it gazed back with approval.');
+                
+                // Warp nearby stars
+                document.querySelectorAll('.star').forEach(star => {
+                    const rect = blackHole.getBoundingClientRect();
+                    const starRect = star.getBoundingClientRect();
+                    const dx = rect.left + rect.width/2 - starRect.left;
+                    const dy = rect.top + rect.height/2 - starRect.top;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+                    
+                    if (distance < 300) {
+                        star.style.transform = `translate(${dx * 0.3}px, ${dy * 0.3}px)`;
+                        setTimeout(() => {
+                            star.style.transform = '';
+                        }, 2000);
+                    }
+                });
+                
+                setTimeout(() => {
+                    this.classList.remove('quantum-glitch');
+                    this.remove();
+                }, 3000);
+            });
+            
+            document.body.appendChild(blackHole);
+            updateDiscoveryLog('blackhole');
+            gameState.objectsSeen.blackhole++;
+    }
+
+
+
+    
+    // ... all your other functions (createShootingStar, showMessage, checkAchievements, etc.)
+    function createShootingStar() {
+            const star = document.createElement('div');
+            star.className = 'shooting-star';
+            star.style.left = Math.random() * window.innerWidth + 'px';
+            star.style.top = -50 + 'px';
+            star.style.animationDuration = (2 + Math.random() * 2) + 's';
+            document.querySelector('.space-canvas').appendChild(star);
+            
+            setTimeout(() => star.remove(), 4000);
+        }
+
+    
+    function showMessage(sender, content, type, encrypted = false, decrypted = '') {
+        const display = document.getElementById('messageDisplay');
+        const senderEl = document.getElementById('messageSender');
+        const contentEl = document.getElementById('messageContent');
+        const timestampEl = document.getElementById('messageTimestamp');
+        let decryptBtn = document.getElementById('messageDecrypt');
+
+        // --- Start of Fix ---
+        // This trick removes any old event listeners from the button by replacing it with a clean clone.
+        const newDecryptBtn = decryptBtn.cloneNode(true);
+        decryptBtn.parentNode.replaceChild(newDecryptBtn, decryptBtn);
+        decryptBtn = newDecryptBtn; // Work with the new, clean button from now on.
+        // --- End of Fix ---
+
+        senderEl.textContent = `TRANSMISSION FROM: ${sender}`;
+        contentEl.textContent = content;
+        timestampEl.textContent = new Date().toLocaleTimeString();
+
+        const visitorClasses = ['satellite-msg', 'rocket-msg', 'ufo-msg', 'whale-msg', 'wormhole-msg', 'derelict-msg', 'blackhole-msg'];
+        display.classList.remove(...visitorClasses);
+
+        if (type) {
+            display.classList.add(`${type}-msg`);
+        }
+
+        if (encrypted) {
+            contentEl.classList.add('alien');
+            decryptBtn.style.display = 'inline-block';
+
+            // Use addEventListener for a more stable event handling
+            decryptBtn.addEventListener('click', function handleDecrypt() {
+                contentEl.textContent = decrypted;
+                contentEl.classList.remove('alien');
+                decryptBtn.style.display = 'none';
+                showAchievement('Decoder', 'Alien message decrypted!');
+            }, { once: true }); // { once: true } ensures the button can only be clicked once per message.
+
+        } else {
+            contentEl.classList.remove('alien');
+            decryptBtn.style.display = 'none';
+        }
+        
+        display.classList.add('show');
+        if (gameState.soundEnabled) {
+            document.getElementById('soundWave').classList.add('active');
+        }
+        
+        setTimeout(() => {
+            display.classList.remove('show');
+            if (document.getElementById('soundWave')) {
+                document.getElementById('soundWave').classList.remove('active');
+            }
+        }, 6000);
+    }
+    
+        
+
+    function checkAchievements() {
+        if (gameState.discoveries >= 10 && !gameState.achievementsUnlocked.explorer) {
+            showAchievement('Explorer', 'Discovered 10 cosmic objects!');
+            gameState.achievementsUnlocked.explorer = true;
+        }
+        
+        if (gameState.alienMessages >= 5 && !gameState.achievementsUnlocked.firstContact) {
+            showAchievement('First Contact', 'Received 5 alien transmissions!');
+            gameState.achievementsUnlocked.firstContact = true;
+        }
+        
+        if (gameState.objectsSeen.whale >= 1 && !gameState.achievementsUnlocked.whaleWatcher) {
+            showAchievement('Whale Watcher', 'Witnessed a Space Whale!');
+            gameState.achievementsUnlocked.whaleWatcher = true;
+        }
+        
+        if (gameState.objectsSeen.wormhole >= 1 && !gameState.achievementsUnlocked.dimensionalTraveler) {
+            showAchievement('Dimensional Traveler', 'Encountered a wormhole!');
+            gameState.achievementsUnlocked.dimensionalTraveler = true;
+        }
+        
+        // Check if all non-blackhole objects have been seen
+        const allSeen = ['satellite', 'rocket', 'ufo', 'whale', 'wormhole', 'derelict']
+                        .every(type => gameState.objectsSeen[type] > 0);
+
+        if (allSeen && !gameState.achievementsUnlocked.masterObserver) {
+            showAchievement('Master Observer', 'Seen all types of cosmic visitors!');
+            gameState.achievementsUnlocked.masterObserver = true;
+        }
+    }
+
+
+
+    function showAchievement(title, description) {
+            const achievement = document.getElementById('achievement');
+            const achievementText = document.getElementById('achievementText');
+            
+            achievementText.innerHTML = `<strong>${title}</strong><br>${description}`;
+            achievement.classList.add('show');
+            
+            if (gameState.soundEnabled) {
+                audioSystem.createBeep(523, 200);
+                setTimeout(() => audioSystem.createBeep(659, 200), 200);
+                setTimeout(() => audioSystem.createBeep(784, 200), 400);
+            }
+            
+            setTimeout(() => {
+                achievement.classList.remove('show');
+            }, 4000);
+    }
+
+    // Update status
+   function updateStatus(text) {
+        const el = document.getElementById('statusText');
+        if (el) el.textContent = text;
+    }
+        
+    // Add radar ping
+    function addRadarPing() {
+        const ping = document.createElement('div');
+        ping.className = 'radar-ping';
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 70 + 10;
+        ping.style.left = 90 + Math.cos(angle) * distance + 'px';
+        ping.style.top = 90 + Math.sin(angle) * distance + 'px';
+        
+        document.getElementById('radarPings').appendChild(ping);
+        setTimeout(() => ping.remove(), 2000);
+    }
+        
+    // Update coordinates
+    function updateCoordinates() {
+        const ra = Math.floor(Math.random() * 24);
+        const raMin = Math.floor(Math.random() * 60);
+        const raSec = Math.floor(Math.random() * 60);
+        
+        const decDeg = Math.floor(Math.random() * 180 - 90);
+        const decMin = Math.floor(Math.random() * 60);
+        const decSec = Math.floor(Math.random() * 60);
+        
+        const distance = (Math.random() * 1000).toFixed(2);
+        
+        document.getElementById('rightAscension').textContent = 
+            `${ra.toString().padStart(2, '0')}h ${raMin.toString().padStart(2, '0')}m ${raSec.toString().padStart(2, '0')}s`;
+        
+        document.getElementById('declination').textContent = 
+            `${decDeg >= 0 ? '+' : ''}${decDeg}° ${decMin.toString().padStart(2, '0')}' ${decSec.toString().padStart(2, '0')}"`;
+            
+        document.getElementById('distance').textContent = `${distance} LY`;
+    }
+        
+    // Update discovery log
+    function updateDiscoveryLog(type) {
+        const log = document.getElementById('discoveryEntries');
+        const entry = document.createElement('div');
+        entry.className = 'discovery-entry';
+        entry.innerHTML = `
+            <div class="discovery-time">${new Date().toLocaleTimeString()}</div>
+            <div>${type.charAt(0).toUpperCase() + type.slice(1)} detected</div>
+        `;
+        
+        log.insertBefore(entry, log.firstChild);
+        
+        // Keep only last 20 entries
+        while (log.children.length > 20) {
+            log.removeChild(log.lastChild);
+        }
+        
+        gameState.discoveries++;
+    }
+   
+    function spawnRandomObject() {
+        const spawnTable = [
+            { type: 'satellite', weight: 40 }, // Common
+            { type: 'rocket',    weight: 35 }, // Common
+            { type: 'ufo',       weight: 25 }, // Uncommon
+            { type: 'whale',     weight: 10 }, // Rare
+            { type: 'derelict',  weight: 8 },  // Very Rare
+            { type: 'wormhole',  weight: 5 },  // Very Rare
+        ];
+
+        const totalWeight = spawnTable.reduce((sum, item) => sum + item.weight, 0);
+        let randomNum = Math.random() * totalWeight;
+
+        for (const item of spawnTable) {
+            if (randomNum < item.weight) {
+                createSpaceObject(item.type);
+                return; // Exit after spawning one object
+            }
+            randomNum -= item.weight;
+        }
+    }
+    //======================================================================
+    // EVENT LISTENERS
+    //======================================================================
+    document.getElementById('soundButton').addEventListener('click', function() {
+        gameState.soundEnabled = !gameState.soundEnabled;
+        this.textContent = `SOUND: ${gameState.soundEnabled ? 'ON' : 'OFF'}`;
+        this.classList.toggle('active');
+        audioSystem.enabled = gameState.soundEnabled;
+        if (gameState.soundEnabled) {
+            audioSystem.init();
+        }
+    });
+
+    document.getElementById('quantumButton').addEventListener('click', function() {
+        gameState.quantumMode = !gameState.quantumMode;
+        this.classList.toggle('active');
+        document.body.classList.toggle('quantum-glitch');
+        updateStatus(gameState.quantumMode ? 'QUANTUM MODE ACTIVATED' : 'QUANTUM MODE DEACTIVATED');
+    });
+
+    document.getElementById('warpButton').addEventListener('click', function() {
+        if (gameState.warpActive) return;
+        gameState.warpActive = true;
+        this.classList.add('active');
+        updateStatus('WARPING SPACE-TIME...');
+        document.body.style.animation = 'warp-space 3s ease-in-out';
+        
+        setTimeout(() => {
+            createBlackHole();
+            document.body.style.animation = '';
+            gameState.warpActive = false;
+            this.classList.remove('active');
+            updateStatus('WARP COMPLETE');
+        }, 3000);
+    });
+    
+    // Konami Code Easter Egg
+    let konamiCode = [];
+    const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    document.addEventListener('keydown', (e) => {
+        konamiCode.push(e.key);
+        konamiCode = konamiCode.slice(-konamiPattern.length);
+        if (konamiCode.join(',') === konamiPattern.join(',')) {
+           showAchievement('Secret Finder', 'Konami Code Activated!');
+            ['satellite', 'rocket', 'ufo', 'whale', 'wormhole', 'derelict'].forEach((type, index) => {
+                setTimeout(() => createSpaceObject(type), index * 1500);
+            });
+        }
+    });
+
+
+    //======================================================================
+    // INITIALIZATION
+    //======================================================================
+    createStarfield();
+    updateStatus('QUANTUM OBSERVATORY ONLINE • SCANNING INFINITY...');
+    
+    setTimeout(() => {
+        spawnRandomObject();
+        setInterval(spawnRandomObject, 12000 + Math.random() * 8000);
+    }, 3000);
+    
+    setInterval(createShootingStar, 5000);
+    setInterval(updateCoordinates, 3000);
+    updateCoordinates();
+
+});
+</script>
+</body>
+</html>

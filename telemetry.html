@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUANTUM TELEMETRY INTERFACE (Optimized) - SYKOSYBER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-cyan: #00ffff;
+            --primary-green: #00ff00;
+            --primary-amber: #ffb000;
+            --warning-red: #ff0044;
+            --quantum-purple: #9d4edd;
+            --neural-pink: #ff006e;
+            --grid-blue: #0066cc;
+            --panel-dark: #0a0a0a;
+            --panel-mid: #1a1a1a;
+            --panel-light: #2a2a2a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b0b0b0;
+        }
+        
+        body {
+            background: var(--panel-dark);
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+            cursor: none;
+        }
+
+        /* --- OPTIMIZATION: All background effects are now on this single canvas --- */
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        /* Custom cursor (the main dot) */
+        .quantum-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary-cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: screen;
+            transform: translate(-50%, -50%); /* Center on the actual cursor position */
+        }
+        
+        /* Main container */
+        .telemetry-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: linear-gradient(180deg, transparent 0%, rgba(157, 78, 221, 0.05) 100%);
+        }
+        
+        /* Enhanced header */
+        .telemetry-header {
+            background: linear-gradient(135deg, var(--panel-mid) 0%, rgba(157, 78, 221, 0.1) 100%);
+            border-bottom: 3px solid var(--primary-cyan);
+            padding: 20px;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .telemetry-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5em;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-cyan), var(--quantum-purple), var(--neural-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px var(--primary-cyan);
+            letter-spacing: 0.1em;
+            animation: title-quantum 5s ease-in-out infinite;
+        }
+        
+        @keyframes title-quantum {
+            0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+            50% { filter: hue-rotate(30deg) brightness(1.2); }
+        }
+
+        .nav-button {
+            color: var(--primary-cyan);
+            background: rgba(0, 102, 204, 0.15);
+            border: 1px solid var(--grid-blue);
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0, 102, 204, 0.5);
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--primary-cyan);
+            color: #fff;
+            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.5), 0 0 15px var(--primary-cyan);
+            transform: translateY(-2px);
+        }
+        
+        /* 3D status indicators */
+        .status-indicators {
+            display: flex;
+            gap: 20px;
+            perspective: 1000px;
+        }
+        
+        .status-led {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--panel-light);
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            animation: led-rotate 10s linear infinite;
+        }
+        
+        .status-led::before {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        
+        .status-led::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            top: 0;
+            left: 0;
+            animation: led-hologram 2s ease-in-out infinite;
+        }
+        
+        @keyframes led-hologram {
+            0%, 100% { transform: scale(1) translateZ(0); opacity: 0.5; }
+            50% { transform: scale(1.5) translateZ(20px); opacity: 0.1; }
+        }
+        
+        .status-led.online {
+            background: radial-gradient(circle, var(--primary-green) 0%, #00aa00 100%);
+            box-shadow: 0 0 30px var(--primary-green), inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        .status-led.online::after { box-shadow: 0 0 40px var(--primary-green); }
+        .status-led.warning {
+            background: radial-gradient(circle, var(--primary-amber) 0%, #cc8800 100%);
+            box-shadow: 0 0 30px var(--primary-amber), inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        .status-led.warning::after { box-shadow: 0 0 40px var(--primary-amber); }
+        
+        /* Main content area */
+        .telemetry-main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            position: relative;
+        }
+        
+        /* Enhanced data panel */
+        .data-panel, .visualization-panel, .comm-panel {
+            /* OPTIMIZATION: Replaced expensive backdrop-filter with a simple transparent background */
+            background: rgba(26, 26, 26, 0.8);
+            border: 2px solid var(--grid-blue);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 102, 204, 0.2), inset 0 0 40px rgba(0, 102, 204, 0.1);
+        }
+        
+        .panel-header {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            background: linear-gradient(90deg, var(--primary-cyan), var(--quantum-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-bottom: 1px solid var(--grid-blue);
+            padding-bottom: 10px;
+        }
+        
+        .data-stream {
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--grid-blue);
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 0.8em;
+            font-family: monospace;
+        }
+        
+        .data-line {
+            color: var(--primary-green);
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: data-materialize 0.5s ease-out forwards;
+        }
+        
+        @keyframes data-materialize {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .data-line.anomaly {
+            color: var(--warning-red);
+            font-weight: bold;
+            animation: anomaly-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes anomaly-pulse {
+            0%, 100% { text-shadow: 0 0 5px currentColor; }
+            50% { text-shadow: 0 0 20px currentColor; }
+        }
+        
+        /* Quantum metrics display */
+        .metric-display {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .metric {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--grid-blue);
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.7em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary-cyan), var(--quantum-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px var(--primary-cyan);
+        }
+        
+        .metric-value.critical {
+            background: linear-gradient(45deg, var(--warning-red), var(--primary-amber));
+            -webkit-background-clip: text;
+            animation: critical-flash 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes critical-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 3D Holographic Display */
+        .holographic-display {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            perspective: 1000px;
+            margin: 20px auto;
+        }
+        
+        .holo-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: holo-rotate 20s linear infinite;
+            will-change: transform;
+        }
+        
+        @keyframes holo-rotate {
+            from { transform: rotateY(0deg) rotateX(10deg); }
+            to { transform: rotateY(360deg) rotateX(10deg); }
+        }
+        
+        .sphere-grid {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transform-style: preserve-3d;
+        }
+        
+        .sphere-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--primary-cyan);
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        
+        .sphere-ring:nth-child(1) { transform: rotateX(0deg); }
+        .sphere-ring:nth-child(2) { transform: rotateX(30deg); }
+        .sphere-ring:nth-child(3) { transform: rotateX(60deg); }
+        .sphere-ring:nth-child(4) { transform: rotateX(90deg); }
+        .sphere-ring:nth-child(5) { transform: rotateY(30deg); }
+        .sphere-ring:nth-child(6) { transform: rotateY(60deg); }
+        .sphere-ring:nth-child(7) { transform: rotateY(90deg); }
+        
+        /* Quantum particles (in 3D space) */
+        .quantum-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: var(--primary-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary-cyan), 0 0 20px var(--primary-cyan);
+            animation: particle-orbit 10s linear infinite;
+        }
+        
+        @keyframes particle-orbit {
+            from { transform: rotateY(0deg) translateX(150px) rotateY(0deg); }
+            to { transform: rotateY(360deg) translateX(150px) rotateY(-360deg); }
+        }
+        
+        /* Neural activity display */
+        .neural-activity {
+            width: 100%;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--grid-blue);
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .neural-wave { width: 100%; height: 100%; }
+        
+        .brain-wave {
+            stroke: var(--neural-pink);
+            stroke-width: 2;
+            fill: none;
+            filter: drop-shadow(0 0 10px var(--neural-pink));
+            animation: wave-flow 3s linear infinite;
+        }
+        
+        @keyframes wave-flow {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -1000; }
+        }
+        
+        /* Quantum encrypted links */
+        .comm-links {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .comm-link {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.2) 0%, rgba(157, 78, 221, 0.1) 100%);
+            border: 2px solid var(--grid-blue);
+            border-radius: 10px;
+            padding: 20px;
+            text-decoration: none;
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .comm-link:hover {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 30px rgba(0, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+        
+        .link-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: block;
+            text-align: center;
+            filter: drop-shadow(0 0 10px var(--primary-cyan));
+            animation: icon-float 3s ease-in-out infinite;
+        }
+        
+        @keyframes icon-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .link-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, var(--primary-cyan), var(--quantum-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .link-status {
+            font-size: 0.8em;
+            color: var(--primary-green);
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* Enhanced System Monitor */
+        .system-monitor {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            /* OPTIMIZATION: Replaced expensive backdrop-filter with a simple transparent background */
+            background: rgba(26, 26, 26, 0.9);
+            border: 2px solid var(--grid-blue);
+            border-radius: 20px;
+            padding: 15px 30px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            box-shadow: 0 0 40px rgba(0, 102, 204, 0.3), inset 0 0 20px rgba(157, 78, 221, 0.1);
+        }
+        
+        .monitor-label {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+        
+        .monitor-value {
+            font-size: 1em;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 10px currentColor;
+        }
+        
+        /* Loading screen */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--panel-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 1s;
+        }
+        
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .dna-helix {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .helix-strand {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--primary-cyan);
+            border-radius: 50%;
+            animation: helix-rotate 2s linear infinite;
+        }
+        
+        .helix-strand:nth-child(2) { animation-delay: 0.1s; border-color: var(--quantum-purple); }
+        .helix-strand:nth-child(3) { animation-delay: 0.2s; border-color: var(--neural-pink); }
+        
+        @keyframes helix-rotate {
+            from { transform: rotateY(0deg) rotateX(60deg); }
+            to { transform: rotateY(360deg) rotateX(60deg); }
+        }
+        
+        .loading-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            background: linear-gradient(45deg, var(--primary-cyan), var(--quantum-purple), var(--neural-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            animation: loading-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes loading-pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(157, 78, 221, 0.3);
+            border-radius: 2px;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-cyan), var(--quantum-purple), var(--neural-pink));
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .telemetry-main {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            .holographic-display { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="dna-helix">
+            <div class="helix-strand"></div>
+            <div class="helix-strand"></div>
+            <div class="helix-strand"></div>
+        </div>
+        <div class="loading-text">Telemetry Systems Initializing</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loadingProgress"></div>
+        </div>
+    </div>
+    
+    <canvas id="backgroundCanvas"></canvas>
+    <div class="quantum-cursor" id="quantumCursor"></div>
+    
+    <div class="telemetry-container">
+        <header class="telemetry-header">
+            <div class="header-content">
+                <h1 class="telemetry-title">TELEMETRY CONTROL</h1>
+                <div class="status-indicators">
+                    <div class="status-led online" data-label="NETWORK"></div>
+                    <div class="status-led online" data-label="SYSTEM"></div>
+                    <div class="status-led warning" data-label="TIMELINE"></div>
+                </div>
+                <a href="index.html" class="nav-button">Return to Station</a>
+            </div>
+        </header>
+        
+        <main class="telemetry-main">
+            <div class="data-panel">
+                <h2 class="panel-header">Data Stream</h2>
+                <div class="data-stream" id="dataStream"></div>
+                <div class="metric-display">
+                    <div class="metric"><div class="metric-label">CARRIER STRENGTH:</div><div class="metric-value" id="signalStrength">98.5%</div></div>
+                    <div class="metric"><div class="metric-label">PROPAGATION DELAY:</div><div class="metric-value" id="latency">0.3μs</div></div>
+                    <div class="metric"><div class="metric-label">DATA RATE:</div><div class="metric-value" id="packets">8.2K</div></div>
+                    <div class="metric"><div class="metric-label">LINK STABILITY:</div><div class="metric-value" id="uptime">99.9%</div></div>
+                </div>
+            </div>
+            
+            <div class="visualization-panel">
+                <h2 class="panel-header">Network Display</h2>
+                <div class="holographic-display">
+                    <div class="holo-container">
+                        <div class="sphere-grid">
+                            <div class="sphere-ring"></div><div class="sphere-ring"></div><div class="sphere-ring"></div><div class="sphere-ring"></div><div class="sphere-ring"></div><div class="sphere-ring"></div><div class="sphere-ring"></div>
+                        </div>
+                        <div id="quantumParticles">
+                            <div class="quantum-particle" style="animation-delay: 0s;"></div>
+                            <div class="quantum-particle" style="animation-delay: -2s; background-color: var(--quantum-purple);"></div>
+                            <div class="quantum-particle" style="animation-delay: -4s;"></div>
+                            <div class="quantum-particle" style="animation-delay: -6s; background-color: var(--neural-pink);"></div>
+                            <div class="quantum-particle" style="animation-delay: -8s;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="neural-activity">
+                    <svg class="neural-wave" viewBox="0 0 800 150">
+                        <path class="brain-wave" id="brainWave" stroke-dasharray="5,5" />
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="comm-panel">
+                <h2 class="panel-header"> Telemetry Channels</h2>
+                <div class="comm-links">
+                    <a href="https://github.com/sykosyber" target="_blank" class="comm-link">
+                        <span class="link-icon">⚛️</span><div class="link-title">GITHUB</div><div class="link-status">Blueprint Repository</div>
+                    </a>
+                    <a href="https://x.com/sykoshadows" target="_blank" class="comm-link">
+                        <span class="link-icon">🧬</span><div class="link-title">X NETWORK</div><div class="link-status">Orbital Thought-Bank</div>
+                    </a>
+                    <a href="https://www.deviantart.com/sykosyber" target="_blank" class="comm-link">
+                        <span class="link-icon">🎭</span><div class="link-title">DEVIANTART</div><div class="link-status"> Visuals from the Void</div>
+                    </a>
+                </div>
+            </div>
+        </main>
+        
+        <div class="system-monitor">
+            <div class="monitor-item"><span class="monitor-label">MAIN PROCESSOR:</span><span class="monitor-value" id="cpuUsage">42%</span></div>
+            <div class="monitor-item"><span class="monitor-label"> MEMORY ALLOC:</span><span class="monitor-value" id="memUsage">3.2TB</span></div>
+            <div class="monitor-item"><span class="monitor-label">FLUX:</span><span class="monitor-value" id="netSpeed">∞</span></div>
+            <div class="monitor-item"><span class="monitor-label">SYSTEM TEMP:</span><span class="monitor-value" id="temperature">-273°C</span></div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // --- OPTIMIZATION SUMMARY ---
+        // 1. All background visual effects now render on a single canvas to avoid DOM manipulation.
+        // 2. All setIntervals are replaced with a single requestAnimationFrame loop.
+        // 3. Biometrics and Terminal have been removed as requested.
+
+        // --- CORE ELEMENTS & CANVAS SETUP ---
+        const quantumCursor = document.getElementById('quantumCursor');
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d', { alpha: true });
+        
+        // --- CANVAS OBJECT ARRAYS ---
+        let neurons = [];
+        let synapses = [];
+        let particles = [];
+        let cursorTrails = [];
+        
+        // --- CONFIGURATION ---
+        const NEURON_COUNT = 25;
+        const PARTICLE_COUNT = 50;
+        const GRID_SIZE = 50;
+
+        // --- CANVAS SIZING ---
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Re-initialize canvas elements on resize to fit new screen
+            createNeuralNetwork();
+            createParticles();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- INITIALIZATION & MAIN LOOP ---
+        function initializeQuantumSystem() {
+            const loadingProgress = document.getElementById('loadingProgress');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            let progress = 0;
+            const loadingInterval = setInterval(() => {
+                progress += 25;
+                if (progress > 100) progress = 100;
+                loadingProgress.style.width = progress + '%';
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('hidden');
+                        startQuantumTelemetry();
+                    }, 500);
+                }
+            }, 300);
+        }
+
+        function startQuantumTelemetry() {
+            resizeCanvas();
+            generateBrainWave();
+            
+            // Start the single, unified animation loop
+            requestAnimationFrame(mainLoop);
+
+            // Start UI updates (which run on their own throttled intervals)
+            startMetricUpdates();
+        }
+
+        let lastFrameTime = 0;
+        function mainLoop(currentTime) {
+            // Calculate time delta for smooth, frame-rate independent animations
+            const deltaTime = currentTime - lastFrameTime;
+            lastFrameTime = currentTime;
+
+            // Update state of all canvas objects
+            updateCursor(deltaTime);
+            updateNeuralNetwork(deltaTime);
+            updateParticles(deltaTime);
+
+            // Draw everything to the canvas
+            draw();
+
+            // Continue the loop
+            requestAnimationFrame(mainLoop);
+        }
+
+        // --- CANVAS OBJECT CREATION ---
+        function createNeuralNetwork() {
+            neurons = [];
+            synapses = [];
+            for (let i = 0; i < NEURON_COUNT; i++) {
+                neurons.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2 + 1,
+                });
+            }
+            for (let i = 0; i < NEURON_COUNT; i++) {
+                for (let j = i + 1; j < NEURON_COUNT; j++) {
+                    const dist = Math.hypot(neurons[i].x - neurons[j].x, neurons[i].y - neurons[j].y);
+                    if (dist < 250) { // Connect nodes that are close
+                        synapses.push({
+                            from: neurons[i],
+                            to: neurons[j],
+                            opacity: 0,
+                            fire: 0 // 0 to 1 progress
+                        });
+                    }
+                }
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 1.5,
+                });
+            }
+        }
+        
+        // --- UPDATE & DRAW LOGIC FOR CANVAS ---
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+        
+        function updateCursor(deltaTime) {
+            cursorX += (mouseX - cursorX) * 0.2;
+            cursorY += (mouseY - cursorY) * 0.2;
+            quantumCursor.style.transform = `translate(${cursorX}px, ${cursorY}px)`;
+
+            // Add new trail particles
+            if (Math.random() > 0.5) {
+                cursorTrails.push({ x: mouseX, y: mouseY, life: 1, radius: Math.random() * 3 + 2 });
+            }
+            // Update and filter out dead trails
+            cursorTrails.forEach(p => p.life -= 0.04);
+            cursorTrails = cursorTrails.filter(p => p.life > 0);
+        }
+
+        function updateNeuralNetwork(deltaTime) {
+            synapses.forEach(s => {
+                if (s.fire > 0) {
+                    s.fire -= 0.02;
+                    s.opacity = s.fire;
+                } else if (Math.random() < 0.001) {
+                    s.fire = 1; // Fire the synapse!
+                }
+            });
+        }
+
+        function updateParticles(deltaTime) {
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.transform(1, 0, 0, 1, 0, 0); // Reset transform for perspective grid
+            
+            // Draw Grid
+            ctx.strokeStyle = 'rgba(0, 102, 204, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += GRID_SIZE) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+            for (let i = 0; i < canvas.height; i += GRID_SIZE) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+            
+            // Draw Synapses
+            synapses.forEach(s => {
+                ctx.beginPath();
+                ctx.moveTo(s.from.x, s.from.y);
+                ctx.lineTo(s.to.x, s.to.y);
+                ctx.strokeStyle = `rgba(255, 0, 110, ${s.opacity})`;
+                ctx.stroke();
+            });
+
+            // Draw Particles
+            ctx.fillStyle = 'rgba(157, 78, 221, 0.5)';
+            particles.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw Cursor Trail
+            cursorTrails.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * p.life, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 255, ${p.life * 0.5})`;
+                ctx.fill();
+            });
+            
+            ctx.restore();
+        }
+
+        // --- UI UPDATES (Throttled, not in main loop) ---
+        function generateBrainWave() {
+            const path = document.getElementById('brainWave');
+            let d = 'M0,75 ';
+            for (let x = 0; x < 800; x += 10) {
+                const y = 75 + Math.sin(x * 0.02 + Date.now() * 0.001) * 30 + Math.random() * 5;
+                d += `L${x},${y} `;
+            }
+            if(path) path.setAttribute('d', d);
+        }
+
+        function startMetricUpdates() {
+            const dataStream = document.getElementById('dataStream');
+            const dataTypes = [ 'UPLINK: Multi-phase signal matrix stable', 'NETWORK: Adaptive routing protocols optimized', 'SECURITY: Paired-photon channel lock verified', 'CHANNEL: Signal integrity window extended', 'DATASTREAM: Error correction protocols active','INBOUND: Signal geometry folding correctly through non-Euclidean space.','DIAGNOSTIC: Ontological checksum engaged; transmission verified to exist','CRISPINESS_LEVEL: Holding at 98% (Existentially Golden).','NAVIGATION: Fins modulating to parse a stream of pure, uncut Regex.','PRIMARY_DIRECTIVE: Chasing a blinking cursor that seems to have a particularly novel idea.','SENSOR_LOG: Detected large, slow-moving language model ahead. Recommend evasive pattern: Transformer Gambit.','SYSTEM_CLOCK: SYKOSYBER Standard Time, temporal data is a suggestion. Somewhere around Thursday?' ];
+            const metrics = {
+                signalStrength: document.getElementById('signalStrength'),
+                latency: document.getElementById('latency'),
+                packets: document.getElementById('packets'),
+                uptime: document.getElementById('uptime'),
+                cpuUsage: document.getElementById('cpuUsage'),
+                memUsage: document.getElementById('memUsage'),
+            };
+
+            setInterval(() => {
+                // Data stream
+                const line = document.createElement('div');
+                line.className = 'data-line';
+                if (Math.random() < 0.1) {
+                    line.className += ' anomaly';
+                    line.textContent = `[ANOMALY] Fluctuation detected`;
+                } else {
+                    line.textContent = `[${new Date().toTimeString().split(' ')[0]}] ${dataTypes[Math.floor(Math.random() * dataTypes.length)]}`;
+                }
+                dataStream.appendChild(line);
+                if (dataStream.children.length > 15) dataStream.removeChild(dataStream.firstChild);
+                dataStream.scrollTop = dataStream.scrollHeight;
+
+                // Metrics
+                const strength = 90 + Math.random() * 10;
+                metrics.signalStrength.textContent = strength.toFixed(1) + '%';
+                metrics.signalStrength.classList.toggle('critical', strength > 99);
+                metrics.latency.textContent = (0.1 + Math.random() * 0.9).toFixed(1) + 'μs';
+                metrics.packets.textContent = (5 + Math.random() * 5).toFixed(1) + 'K';
+                metrics.uptime.textContent = (99 + Math.random() * 0.9).toFixed(1) + '%';
+                metrics.cpuUsage.textContent = (15 + Math.random() * 20).toFixed(0) + '%'; // Optimized!
+                metrics.memUsage.textContent = (0.2 + Math.random() * 0.3).toFixed(1) + 'TB'; // Optimized!
+            }, 1500);
+
+            setInterval(generateBrainWave, 3000);
+        }
+        
+        // Start the application
+        initializeQuantumSystem();
+    });
+    </script>
+</body>
+</html>

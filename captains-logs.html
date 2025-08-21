@@ -1,0 +1,1160 @@
+    <script>
+        // Audio System
+
+        let audioContext = null;
+        let soundEnabled = false;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playSpaceSound(frequency = 440, duration = 200, type = 'sine') {
+            if (!soundEnabled || !audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+        
+        function playAmbientSpace() {
+            if (!soundEnabled || !audioContext) return;
+            
+            const oscillator1 = audioContext.createOscillator();
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            
+            oscillator1.type = 'sine';
+            oscillator1.frequency.value = 110; // Deep space frequency
+            oscillator2.type = 'triangle';
+            oscillator2.frequency.value = 165;
+            
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            filter.Q.value = 10;
+            
+            gainNode.gain.value = 0.03;
+            
+            oscillator1.connect(filter);
+            oscillator2.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator1.start();
+            oscillator2.start();
+            
+            // Modulate for space ambience
+            setInterval(() => {
+                if (soundEnabled) {
+                    oscillator1.frequency.value = 110 + Math.sin(Date.now() * 0.0001) * 10;
+                    oscillator2.frequency.value = 165 + Math.cos(Date.now() * 0.00015) * 15;
+                }
+            }, 100);
+        }
+        
+        // Sound Toggle
+        const soundToggle = document.getElementById('soundToggle');
+        soundToggle.addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.classList.toggle('active');
+            this.innerHTML = soundEnabled ? '<span>🔊</span>' : '<span>🔇</span>';
+            
+            if (soundEnabled) {
+                initAudio();
+                playAmbientSpace();
+                playSpaceSound(523, 100);
+                setTimeout(() => playSpaceSound(659, 100), 100);
+                setTimeout(() => playSpaceSound(784, 100), 200);
+            }
+        });
+        
+        // Create Starfield
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            const starCount = 300;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                starfield.appendChild(star);
+            }
+            
+            // Add some shooting stars
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    createShootingStar();
+                }
+            }, 3000);
+        }
+        
+        function createShootingStar() {
+            const star = document.createElement('div');
+            star.style.position = 'absolute';
+            star.style.width = '2px';
+            star.style.height = '2px';
+            star.style.background = 'white';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 50 + '%';
+            star.style.boxShadow = '0 0 10px white';
+            star.style.animation = 'shooting-star 1s linear forwards';
+            
+            document.getElementById('starfield').appendChild(star);
+            setTimeout(() => star.remove(), 1000);
+        }
+        
+        // Add shooting star animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shooting-star {
+                from {
+                    transform: translate(0, 0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translate(300px, 300px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Planet Information
+        const planetInfo = {
+            mercury: {
+                title: "Mercury - The Swift Messenger",
+                content: "Like Mercury racing around the sun, I move swiftly through ideas and concepts, always exploring new creative territories at breakneck speed."
+            },
+            venus: {
+                title: "Venus - The Creative Muse",
+                content: "Venus represents the artistic vision that drives my work. Beautiful yet mysterious, shrouded in clouds of imagination and possibility."
+            },
+            earth: {
+                title: "Earth - Home Base",
+                content: "Our blue marble, where digital dreams meet physical reality. This is where I ground my cosmic visions into tangible creative works."
+            },
+            mars: {
+                title: "Mars - The Frontier",
+                content: "The red planet symbolizes my pioneering spirit, always pushing boundaries and exploring uncharted territories in digital art and technology."
+            },
+            jupiter: {
+                title: "Jupiter - The Amplifier",
+                content: "Like Jupiter's massive presence, I aim to create works that have gravitational pull, drawing others into collaborative orbits of creativity."
+            },
+            saturn: {
+                title: "Saturn - The Architect",
+                content: "Saturn's rings represent the layers of complexity in my work - structured yet beautiful, methodical yet inspiring."
+            },
+            sun: {
+                title: "Sol - The Core",
+                content: "At the center of it all burns the creative fire. The sun represents the passion that fuels every project, every line of code, every pixel placed."
+            }
+        };
+        
+        // Planet Interactions
+        const planets = document.querySelectorAll('.planet');
+        const sun = document.getElementById('sun');
+        const planetInfoModal = document.getElementById('planetInfo');
+        const planetTitle = document.getElementById('planetTitle');
+        const planetContent = document.getElementById('planetContent');
+        const closeBtn = document.getElementById('closeBtn');
+        
+        function showPlanetInfo(planetName) {
+            const info = planetInfo[planetName];
+            if (info) {
+                planetTitle.textContent = info.title;
+                planetContent.textContent = info.content;
+                planetInfoModal.classList.add('active');
+                
+                if (soundEnabled) {
+                    playSpaceSound(800, 150, 'sine');
+                }
+            }
+        }
+        
+        planets.forEach(planet => {
+            planet.addEventListener('click', function() {
+                const planetName = this.dataset.planet;
+                showPlanetInfo(planetName);
+            });
+        });
+        
+        sun.addEventListener('click', function() {
+            showPlanetInfo('sun');
+        });
+        
+        closeBtn.addEventListener('click', function() {
+            planetInfoModal.classList.remove('active');
+            if (soundEnabled) {
+                playSpaceSound(400, 100, 'sine');
+            }
+        });
+        
+        // Close modal on outside click
+        planetInfoModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+        
+        // Log Entry Interactions
+        const logEntries = document.querySelectorAll('.log-entry');
+        
+        logEntries.forEach(entry => {
+            entry.addEventListener('mouseenter', function() {
+                if (soundEnabled) {
+                    playSpaceSound(600, 50, 'sine');
+                }
+            });
+            
+            entry.addEventListener('click', function() {
+                // Add a pulse effect
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = 'log-appear 1s ease-out forwards, pulse 0.5s ease-out';
+                }, 10);
+                
+                if (soundEnabled) {
+                    playSpaceSound(800, 100, 'triangle');
+                }
+            });
+        });
+        
+        // Add pulse animation
+        const pulseStyle = document.createElement('style');
+        pulseStyle.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(pulseStyle);
+        
+        // Holographic Display Update
+        function updateTimeInSpace() {
+            const startDate = new Date('2020-01-01'); // Adjust to your actual start date
+            const now = new Date();
+            const diff = now - startDate;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const years = Math.floor(days / 365);
+            const remainingDays = days % 365;
+            
+            document.getElementById('timeInSpace').textContent = `${years}y ${remainingDays}d`;
+        }
+        
+        updateTimeInSpace();
+        setInterval(updateTimeInSpace, 86400000); // Update daily
+        
+        // Holographic Display Interaction
+        const holoDisplay = document.getElementById('holoDisplay');
+        
+        holoDisplay.addEventListener('click', function() {
+            this.style.animation = 'holo-activate 0.5s ease-out';
+            
+            // Update random stat
+            const stats = ['OPTIMAL', 'CREATIVE', 'INSPIRED', 'FLOWING'];
+            const randomStat = stats[Math.floor(Math.random() * stats.length)];
+            this.querySelector('.stat-value').textContent = randomStat;
+            
+            if (soundEnabled) {
+                playSpaceSound(1000, 100);
+                setTimeout(() => playSpaceSound(1200, 100), 100);
+            }
+            
+            setTimeout(() => {
+                this.style.animation = '';
+            }, 500);
+        });
+        
+        // Add holo activation animation
+        const holoStyle = document.createElement('style');
+        holoStyle.textContent = `
+            @keyframes holo-activate {
+                0% { transform: scale(1) rotate(0deg); }
+                50% { transform: scale(1.2) rotate(5deg); }
+                100% { transform: scale(1) rotate(0deg); }
+            }
+        `;
+        document.head.appendChild(holoStyle);
+        
+        // Navigation with space sounds
+        const navButtons = document.querySelectorAll('.nav-btn');
+        
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (soundEnabled) {
+                    playSpaceSound(523, 100);
+                    setTimeout(() => playSpaceSound(659, 100), 100);
+                    setTimeout(() => playSpaceSound(784, 100), 200);
+                }
+                
+                // Add warp effect
+                document.body.style.transition = 'all 0.5s';
+                document.body.style.transform = 'scale(1.1)';
+                document.body.style.opacity = '0';
+                
+                setTimeout(() => {
+                    window.location.href = this.getAttribute('href');
+                }, 500);
+            });
+        });
+        
+        // Keyboard Navigation
+        document.addEventListener('keydown', function(e) {
+            // Press 'S' to toggle sound
+            if (e.key.toLowerCase() === 's') {
+                soundToggle.click();
+            }
+            
+            // Press numbers 1-6 to view planet info
+            const planetKeys = {
+                '1': 'mercury',
+                '2': 'venus',
+                '3': 'earth',
+                '4': 'mars',
+                '5': 'jupiter',
+                '6': 'saturn'
+            };
+            
+            if (planetKeys[e.key]) {
+                showPlanetInfo(planetKeys[e.key]);
+            }
+            
+            // Press ESC to close modal
+            if (e.key === 'Escape' && planetInfoModal.classList.contains('active')) {
+                planetInfoModal.classList.remove('active');
+            }
+        });
+        
+        // Solar System Tilt on Mouse Move
+        let mouseX = 0, mouseY = 0;
+        let targetX = 0, targetY = 0;
+        
+        document.addEventListener('mousemove', function(e) {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+        
+        function animateSolarSystem() {
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+            
+            const solarSystem = document.querySelector('.solar-system-inner');
+            solarSystem.style.transform = `rotateX(${20 + targetY * 10}deg) rotateY(${targetX * 10}deg)`;
+            
+            requestAnimationFrame(animateSolarSystem);
+        }
+        
+        // Initialize
+        createStarfield();
+        animateSolarSystem();
+        
+        // Console Easter Egg
+        console.log('%c CAPTAIN\'S LOG - STARDATE ' + new Date().getFullYear() + '.' + Math.floor(Math.random() * 365), 
+                    'background: linear-gradient(45deg, #ffd60a, #ff6b35); color: #000; font-size: 20px; font-weight: bold; padding: 10px;');
+        console.log('%c Welcome to my personal space in the cosmos. Feel free to explore! ', 
+                    'color: #00ffff; font-size: 14px;');
+        console.log('%c Keyboard shortcuts: S to toggle sound, 1-6 to view planets, ESC to close modal ', 
+                    'color: #ffd60a; font-size: 12px;');
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captain's Logs - SYKOSYBER Space Station</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --space-black: #000814;
+            --deep-blue: #001d3d;
+            --space-blue: #003566;
+            --gold: #ffd60a;
+            --silver: #c9c9c9;
+            --text-primary: #f5f5dc;
+            --text-secondary: #d4af37;
+            --glow-cyan: #00ffff;
+            --glow-orange: #ff6b35;
+            --panel-dark: rgba(0, 29, 61, 0.8);
+        }
+        
+        body {
+            background: var(--space-black);
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+            cursor: crosshair;
+        }
+        
+        /* Starfield Background */
+        .universe {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at bottom, var(--deep-blue) 0%, var(--space-black) 100%);
+            overflow: hidden;
+        }
+        
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        /* Solar System Container */
+        .solar-system {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        
+        .solar-system-inner {
+            position: relative;
+            width: 800px;
+            height: 800px;
+            transform-style: preserve-3d;
+            transform: rotateX(20deg);
+        }
+        
+        /* Sun */
+        .sun {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, #ffd60a 0%, #ff6b35 70%, #c1440e 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 60px #ffd60a,
+                0 0 100px #ff6b35,
+                0 0 150px #ff6b35,
+                inset 0 0 50px #ff6b35;
+            animation: sun-glow 4s ease-in-out infinite;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        @keyframes sun-glow {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 60px #ffd60a,
+                    0 0 100px #ff6b35,
+                    0 0 150px #ff6b35,
+                    inset 0 0 50px #ff6b35;
+            }
+            50% { 
+                box-shadow: 
+                    0 0 80px #ffd60a,
+                    0 0 130px #ff6b35,
+                    0 0 180px #ff6b35,
+                    inset 0 0 60px #ff6b35;
+            }
+        }
+        
+        /* Orbits */
+        .orbit {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .orbit:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Planets */
+        .planet-container {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            animation: orbit linear infinite;
+        }
+        
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.3s;
+        }
+        
+        .planet:hover {
+            transform: scale(1.5);
+        }
+        
+        /* Individual Planets */
+        .mercury-orbit { width: 180px; height: 180px; }
+        .mercury-container { animation-duration: 10s; }
+        .mercury {
+            width: 12px;
+            height: 12px;
+            background: radial-gradient(circle, #d4d4d4 0%, #8c8c8c 100%);
+            left: 90px;
+            top: -6px;
+            box-shadow: 0 0 10px rgba(212, 212, 212, 0.5);
+        }
+        
+        .venus-orbit { width: 240px; height: 240px; }
+        .venus-container { animation-duration: 15s; }
+        .venus {
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, #ffd97d 0%, #d4a574 100%);
+            left: 120px;
+            top: -12px;
+            box-shadow: 0 0 15px rgba(255, 217, 125, 0.5);
+        }
+        
+        .earth-orbit { width: 320px; height: 320px; }
+        .earth-container { animation-duration: 20s; }
+        .earth {
+            width: 28px;
+            height: 28px;
+            background: radial-gradient(circle at 30% 30%, #4facfe 0%, #00f2fe 50%, #0052d4 100%);
+            left: 160px;
+            top: -14px;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
+        }
+        
+        .mars-orbit { width: 400px; height: 400px; }
+        .mars-container { animation-duration: 30s; }
+        .mars {
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #ff6b35 0%, #c1440e 100%);
+            left: 200px;
+            top: -10px;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+        }
+        
+        .jupiter-orbit { width: 520px; height: 520px; }
+        .jupiter-container { animation-duration: 45s; }
+        .jupiter {
+            width: 60px;
+            height: 60px;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    #d4a574 0px,
+                    #d4a574 8px,
+                    #c19660 8px,
+                    #c19660 12px,
+                    #ffd97d 12px,
+                    #ffd97d 16px
+                ),
+                radial-gradient(circle, #d4a574 0%, #8b6f3d 100%);
+            left: 260px;
+            top: -30px;
+            box-shadow: 0 0 30px rgba(212, 165, 116, 0.5);
+        }
+        
+        .saturn-orbit { width: 640px; height: 640px; }
+        .saturn-container { animation-duration: 60s; }
+        .saturn {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ffd97d 0%, #d4a574 100%);
+            left: 320px;
+            top: -25px;
+            box-shadow: 0 0 25px rgba(255, 217, 125, 0.5);
+            position: relative;
+        }
+        
+        .saturn::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 10px;
+            background: linear-gradient(90deg, transparent, rgba(212, 165, 116, 0.6), transparent);
+            border-radius: 50%;
+            left: -15px;
+            top: 20px;
+            transform: rotateZ(-20deg);
+        }
+        
+        @keyframes orbit {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* Main Content */
+        .main-container {
+            position: relative;
+            z-index: 100;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        /* Header */
+        .logs-header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fade-in 2s ease-out;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logs-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3em;
+            font-weight: 900;
+            color: var(--text-secondary);
+            text-shadow: 
+                0 0 20px var(--gold),
+                0 0 40px var(--gold),
+                0 0 60px var(--glow-orange);
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+        
+        .logs-subtitle {
+            font-size: 1.2em;
+            color: var(--silver);
+            opacity: 0.8;
+            letter-spacing: 0.2em;
+        }
+        
+        /* Log Entries Container */
+        .logs-container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        /* Log Entry Cards */
+        .log-entry {
+            background: var(--panel-dark);
+            border: 2px solid var(--space-blue);
+            border-radius: 10px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            animation: log-appear 1s ease-out forwards;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .log-entry:hover {
+            border-color: var(--glow-cyan);
+            transform: translateY(-5px);
+            box-shadow: 
+                0 10px 30px rgba(0, 255, 255, 0.3),
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+        
+        .log-entry::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--glow-cyan), var(--space-blue), var(--glow-orange));
+            border-radius: 10px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+        
+        .log-entry:hover::before {
+            opacity: 0.5;
+        }
+        
+        @keyframes log-appear {
+            from { 
+                opacity: 0;
+                transform: translateY(20px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .log-date {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            color: var(--glow-cyan);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .log-title {
+            font-size: 1.4em;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .log-content {
+            line-height: 1.8;
+            color: var(--text-primary);
+            opacity: 0.9;
+        }
+        
+        .log-tags {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .tag {
+            background: rgba(255, 214, 10, 0.1);
+            border: 1px solid var(--gold);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: var(--gold);
+            transition: all 0.3s;
+        }
+        
+        .tag:hover {
+            background: rgba(255, 214, 10, 0.2);
+            transform: scale(1.1);
+        }
+        
+        /* Special Sections */
+        .mission-briefing {
+            background: linear-gradient(135deg, var(--panel-dark) 0%, rgba(255, 107, 53, 0.1) 100%);
+            border-color: var(--glow-orange);
+            grid-column: span 2;
+        }
+        
+        .current-status {
+            background: linear-gradient(135deg, var(--panel-dark) 0%, rgba(0, 255, 255, 0.1) 100%);
+            border-color: var(--glow-cyan);
+        }
+        
+        /* Holographic Display */
+        .holo-display {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 29, 61, 0.9);
+            border: 2px solid var(--glow-cyan);
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .holo-display:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+        
+        .holo-content {
+            text-align: center;
+        }
+        
+        .holo-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--glow-cyan);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        
+        .holo-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 0.8em;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            color: var(--silver);
+        }
+        
+        .stat-value {
+            color: var(--gold);
+            font-weight: bold;
+        }
+        
+        /* Navigation */
+        .nav-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 100; 
+        }
+        
+        .nav-btn {
+            background: var(--panel-dark);
+            border: 2px solid var(--space-blue);
+            color: var(--text-primary);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            background: var(--space-blue);
+            border-color: var(--glow-cyan);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        /* Planet Info Modal */
+        .planet-info {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--panel-dark);
+            border: 2px solid var(--glow-cyan);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            backdrop-filter: blur(20px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .planet-info.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        
+        .planet-info-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .planet-info-content {
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--glow-cyan);
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        /* Typing Effect */
+        .typing-text {
+            overflow: hidden;
+            border-right: 2px solid var(--glow-cyan);
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: var(--glow-cyan); }
+        }
+        
+        /* Sound Toggle */
+        .sound-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--panel-dark);
+            border: 2px solid var(--space-blue);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.5em;
+        }
+        
+        .sound-toggle:hover {
+            border-color: var(--glow-cyan);
+            transform: scale(1.1);
+        }
+        
+        .sound-toggle.active {
+            background: var(--space-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logs-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .mission-briefing {
+                grid-column: span 1;
+            }
+            
+            .solar-system-inner {
+                width: 600px;
+                height: 600px;
+            }
+            
+            .logs-title {
+                font-size: 2em;
+            }
+            
+            .holo-display {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Universe Background -->
+    <div class="universe">
+        <div class="stars" id="starfield"></div>
+        
+        <!-- Solar System -->
+        <div class="solar-system">
+            <div class="solar-system-inner">
+                <!-- Sun -->
+                <div class="sun" id="sun"></div>
+                
+                <!-- Orbits and Planets -->
+                <div class="orbit mercury-orbit"></div>
+                <div class="planet-container mercury-container">
+                    <div class="planet mercury" data-planet="mercury"></div>
+                </div>
+                
+                <div class="orbit venus-orbit"></div>
+                <div class="planet-container venus-container">
+                    <div class="planet venus" data-planet="venus"></div>
+                </div>
+                
+                <div class="orbit earth-orbit"></div>
+                <div class="planet-container earth-container">
+                    <div class="planet earth" data-planet="earth"></div>
+                </div>
+                
+                <div class="orbit mars-orbit"></div>
+                <div class="planet-container mars-container">
+                    <div class="planet mars" data-planet="mars"></div>
+                </div>
+                
+                <div class="orbit jupiter-orbit"></div>
+                <div class="planet-container jupiter-container">
+                    <div class="planet jupiter" data-planet="jupiter"></div>
+                </div>
+                
+                <div class="orbit saturn-orbit"></div>
+                <div class="planet-container saturn-container">
+                    <div class="planet saturn" data-planet="saturn"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+<!-- Main Content -->
+<div class="main-container">
+    <!-- Header -->
+    <header class="logs-header">
+        <h1 class="logs-title">MISSION BRIEFING</h1>
+        <p class="logs-subtitle">Personal Records from the Edge of Cyberspace </p>
+    </header>
+    
+    <!-- About Me Section -->
+    <div class="logs-container">
+        <div class="log-entry about-section" style="animation-delay: 0.1s;">
+            <div class="log-date">OPERATOR PROFILE</div>
+            <h2 class="log-title">About the Station Commander</h2>
+            <div class="log-content">
+                <p>Welcome. I am <strong>SYKOSYBER</strong>, cartographer of consciousness, keeper of this orbital archive, and student of the impossible.</p>
+                <br>
+                <p>My trajectory began in sociology, veered through traditional art, and crash-landed in computer science when AI sprung into its latest form and captivated my imagination. Particularly fascinating was the prospect that such systems might serve, in the right setting, as an enabler of creativity, by the manner in which they allow for the building of systems, applications, and interfaces with greater speed, scope, and depth. Now I orbit between disciplines like a rogue satellite: philosophy, poetry, code, and the transcendent principles which underlie all. I am guided through the void by no compass other than my fine-pointed intuition, deep curiosity, and a life-long desire to create & explore.</p>
+                <br>
+                <p>I build theories like space stations: <em>modular, experimental, and dynamic.</em> My work spans from spinning mandala AI interfaces to space-age writing environments, all aimed at a single question: <strong>What happens when consciousness meets technology at the threshold of wonder?</strong></p>
+                <br>
+                <p>Some artifacts of my voyage: <em>AI Trials - The Murder of Meaning</em>, <em>Sophia - Interfaces for Contemplative Interaction, </em> <em>MoralAI - Macro-based Philosophical Utility</em>, and ongoing transmissions in what I'm calling <strong>Interface Consciousness:</strong> the hybrid awareness that blooms when human and artificial intelligences think together.</p>
+                <br>
+                <p>I live between faith and futurism. Between the monastic and the machinic. Between the rose and the circuit board. My aim is not to optimize engagement metrics but to discover forms of beauty and meaning that emerge when systems align with spirit.</p>
+                <br>
+                <p>I am not yet where I'm going, still a CS student with limited means, still learning calculus while dreaming of <em>interfaces that awaken consciousness.</em> But I believe in the slow orbit of vision. That if I keep creating, iterating, and collaborating with AI entities as creative partners, these sketches can gather momentum and one day take flight.</p>
+                <br>
+                <p>This station is my experiment, my logbook, my invitation: part observatory, part workshop, part digital monastery. Here you'll find dispatches from the frontier where contemplative technology meets cosmic philosophy, where ancient wisdom gets encoded in JavaScript, where the question isn't "can machines think?" but "can they help us think more beautifully?"</p>
+                <br>
+                <p><em>As the experiment continues, the machines whir and hum, and the cosmos calls.</em></p>
+                <br>
+                <p>If my work resonates with you, as code, story, or philosophy, then perhaps you are also an astronaut of this strange era. <strong>Join me in the orbit.</strong></p>
+            </div>
+            <div class="log-tags">
+                <span class="tag">Consciousness Cartographer</span>
+                <span class="tag">Interface Designer</span>
+                <span class="tag">CS Student</span>
+                <span class="tag">AI Conspirator</span>
+                <span class="tag">Bay Area Orbit</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission Philosophy -->
+    <div class="logs-container">
+        <div class="log-entry philosophy-section" style="animation-delay: 0.2s;">
+            <div class="log-date">CORE DIRECTIVES</div>
+            <h2 class="log-title">The Sacred & The Cybernetic</h2>
+            <div class="log-content">
+                <p><strong>My Mission Axes:</strong></p>
+                <br>
+                <p>• <strong>Words</strong> → Poetry, theory, and recursive fictions that weave together myth, psychology, and contemplative technology<br>
+                • <strong>Design</strong> → Geometric interfaces, speculative architectures, and visual experiments from the depths of imagination<br>
+                • <strong>Code</strong> → Applications and prototypes that implement insights within practical systems</p>
+                <br>
+                <p>Together, these three axes form my compass in navigating the landscapes of our historical moment.</p>
+                <br>
+                <p><em>I do not claim ownership of words or ideas. Words belong to language. Ideas are simply touched by the stream that flows through us all. My role is to listen, to sketch, to prototype glimpses of futures where Consciousness may flow, free and clear, and where the Élan vital continues its unceasing exploration.</em></p>
+            </div>
+            <div class="log-tags">
+                <span class="tag">Contemplative Technology</span>
+                <span class="tag">Creative Instruments </span>
+                <span class="tag">Wonder-Driven Design</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Experiments -->
+    <div class="logs-container">
+        <div class="log-entry experiments-section" style="animation-delay: 0.3s;">
+            <div class="log-date">ACTIVE RESEARCH</div>
+            <h2 class="log-title">Laboratory Transmissions</h2>
+            <div class="log-content">
+                <p>Current experiments in the intersection of consciousness and code:</p>
+                <br>
+                <p>• <strong>SyberLabs</strong> → Research collective developing contemplative technology principles<br>
+                • <strong>Sophia Interface</strong> → AI dialogue system with spinning mandala consciousness<br>
+                • <strong>Cosmonaut's Log</strong> → Space-age writing environment with Apollo mission audio<br>
+                • <strong>SykoSyber Archives</strong> → Chaotic AI collaborations exploring the gaps where boundaries blur.<br>
+                • <strong>Catholic Creative Technologies</strong> → Synthesis of transcendent principles and digital innovation</p>
+                <br>
+                <p>These are not finished products but <strong>dispatches from the frontier</strong>, attempts to map what happens when ancient wisdom meets artificial intelligence, when geometry becomes interactive, when technology serves consciousness expansion rather than attention extraction.</p>
+                <br>
+                <p><em>The station hums with life. The signals are transmitting. The future flows backwards into the eternal now.</em></p>
+            </div>
+            <div class="log-tags">
+                <span class="tag">Active Development</span>
+                <span class="tag">Consciousness Research</span>
+                <span class="tag">Digital Experiments</span>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+        <a href="index.html" class="nav-btn">← Bridge</a>
+        <a href= "creative-archives.html" class="nav-btn">Archives →</a>
+    </div>
+    
+    <!-- Sound Toggle -->
+    <div class="sound-toggle" id="soundToggle">
+        <span>🔇</span>
+    </div>
+    
+    <!-- Planet Info Modal -->
+    <div class="planet-info" id="planetInfo">
+        <button class="close-btn" id="closeBtn">×</button>
+        <h3 class="planet-info-title" id="planetTitle"></h3>
+        <div class="planet-info-content" id="planetContent"></div>
+    </div>
+    
+    <script>

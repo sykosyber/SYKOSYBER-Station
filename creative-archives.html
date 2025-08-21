@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Archives - SYKOSYBER SPACE STATION</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;700&family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-glow: #87ceeb;
+            --secondary-glow: #4a90a4;
+            --accent-glow: #51cf66;
+            --warning-glow: #ff6b6b;
+            --bg-dark: #0d1b2a;
+            --bg-mid: #1a237e;
+            --panel-dark: #0a0a0a;
+            --panel-glass: rgba(13, 27, 42, 0.6);
+            --text-primary: #f5f5dc;
+            --text-secondary: #e6d7c3;
+            --text-tertiary: #b8860b;
+            --code-color: #00ff00;
+            --words-color: #ffd700;
+            --art-color: #ff00ff;
+        }
+        
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--secondary-glow) var(--panel-dark);
+        }
+        
+        *::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        *::-webkit-scrollbar-track {
+            background: var(--panel-dark);
+        }
+        
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--secondary-glow);
+            border-radius: 4px;
+        }
+        
+        body {
+            background: radial-gradient(ellipse at center, var(--bg-mid) 0%, var(--bg-dark) 40%, #000814 100%);
+            color: var(--text-primary);
+            font-family: 'IBM Plex Mono', monospace;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Animated starfield background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+        
+        .star {
+            position: absolute;
+            background: var(--text-primary);
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        /* Scan lines effect */
+        .scan-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(245, 245, 220, 0.01) 2px,
+                rgba(245, 245, 220, 0.01) 4px
+            );
+            pointer-events: none;
+            z-index: -1;
+            animation: scan-move 8s linear infinite;
+        }
+        
+        @keyframes scan-move {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+        
+        /* Header */
+        .archive-header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(180deg, rgba(13, 27, 42, 0.9) 0%, transparent 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .archive-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-glow), transparent);
+            animation: scan-line 3s linear infinite;
+        }
+        
+        @keyframes scan-line {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .main-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
+            font-weight: 900;
+            color: var(--primary-glow);
+            text-shadow: 
+                0 0 30px rgba(135, 206, 235, 0.5),
+                0 0 60px rgba(135, 206, 235, 0.3),
+                0 0 90px rgba(135, 206, 235, 0.1);
+            letter-spacing: 0.2em;
+            margin-bottom: 10px;
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; text-shadow: 0 0 50px rgba(135, 206, 235, 0.8); }
+        }
+        
+        .archive-subtitle {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5em;
+            color: var(--text-secondary);
+            letter-spacing: 0.3em;
+            opacity: 0;
+            animation: fade-in 1s ease-out 0.5s forwards;
+        }
+        
+        @keyframes fade-in {
+            to { opacity: 1; }
+        }
+        
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .exit-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: var(--panel-glass);
+            border: 2px solid var(--secondary-glow);
+            border-radius: 30px;
+            color: var(--primary-glow);
+            text-decoration: none;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .exit-link:hover {
+            background: rgba(135, 206, 235, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.4);
+        }
+        
+        /* Main container */
+        .archive-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Three column layout */
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        /* Archive columns */
+        .archive-column {
+            background: var(--panel-glass);
+            border: 2px solid var(--secondary-glow);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: column-load 0.8s ease-out forwards;
+        }
+        
+        .archive-column:nth-child(1) { animation-delay: 0.2s; }
+        .archive-column:nth-child(2) { animation-delay: 0.4s; }
+        .archive-column:nth-child(3) { animation-delay: 0.6s; }
+        
+        @keyframes column-load {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .archive-column::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-glow);
+        }
+        
+        .archive-column.code::before { background: var(--code-color); }
+        .archive-column.words::before { background: var(--words-color); }
+        .archive-column.art::before { background: var(--art-color); }
+        
+        .column-header {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3em;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--secondary-glow);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .column-header.code { color: var(--code-color); text-shadow: 0 0 20px var(--code-color); }
+        .column-header.words { color: var(--words-color); text-shadow: 0 0 20px var(--words-color); }
+        .column-header.art { color: var(--art-color); text-shadow: 0 0 20px var(--art-color); }
+        
+        /* Project items */
+        .archive-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--secondary-glow);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: item-fade-in 0.5s ease-out forwards;
+        }
+        
+        .archive-item:nth-child(odd) { animation-delay: 0.1s; }
+        .archive-item:nth-child(even) { animation-delay: 0.2s; }
+        
+        @keyframes item-fade-in {
+            to { opacity: 1; }
+        }
+        
+        .archive-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(135, 206, 235, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .archive-item:hover::before {
+            left: 100%;
+        }
+        
+        .archive-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(135, 206, 235, 0.3);
+            border-color: var(--primary-glow);
+        }
+        
+        .code .archive-item:hover { box-shadow: 0 10px 30px rgba(0, 255, 0, 0.3); border-color: var(--code-color); }
+        .words .archive-item:hover { box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3); border-color: var(--words-color); }
+        
+        .project-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .project-title {
+            font-weight: 700;
+            color: var(--primary-glow);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .code .project-title { color: var(--code-color); }
+        .words .project-title { color: var(--words-color); }
+        
+        .project-description {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .tech-tag {
+            background: rgba(135, 206, 235, 0.2);
+            border: 1px solid var(--primary-glow);
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            color: var(--primary-glow);
+            text-transform: uppercase;
+        }
+        
+        .code .tech-tag { background: rgba(0, 255, 0, 0.2); border-color: var(--code-color); color: var(--code-color); }
+        
+        /* Article items */
+        .article-source {
+            font-size: 0.8em;
+            color: var(--text-tertiary);
+            margin-bottom: 5px;
+        }
+        
+        .article-date {
+            font-size: 0.8em;
+            color: var(--secondary-glow);
+            margin-bottom: 10px;
+        }
+        
+        .article-excerpt {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            line-height: 1.5;
+            opacity: 0.8;
+        }
+        
+        /* Art grid */
+        .art-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .art-thumbnail {
+            position: relative;
+            padding-top: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--secondary-glow);
+            border-radius: 10px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .art-thumbnail:hover {
+            transform: scale(1.05);
+            border-color: var(--art-color);
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);
+        }
+        
+        .art-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .art-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.8) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .art-thumbnail:hover .art-overlay {
+            opacity: 1;
+        }
+        
+        .art-title {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            color: var(--text-primary);
+            font-size: 0.8em;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .lightbox.active {
+            display: flex;
+            animation: lightbox-fade-in 0.3s ease-out;
+        }
+        
+        @keyframes lightbox-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            background: var(--panel-glass);
+            border: 3px solid var(--art-color);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 50px rgba(255, 0, 255, 0.5);
+            animation: lightbox-zoom 0.3s ease-out;
+        }
+        
+        @keyframes lightbox-zoom {
+            from { transform: scale(0.8); }
+            to { transform: scale(1); }
+        }
+        
+        .lightbox-image {
+            max-width: 100%;
+            max-height: 70vh;
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+        }
+        
+        .lightbox-info {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        .lightbox-info div {
+            margin-bottom: 5px;
+        }
+        
+        .lightbox-info span {
+            color: var(--art-color);
+            font-weight: 700;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid var(--warning-glow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5em;
+            color: var(--warning-glow);
+            transition: all 0.3s ease;
+        }
+        
+        .lightbox-close:hover {
+            background: rgba(255, 107, 107, 0.4);
+            transform: rotate(90deg);
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--secondary-glow);
+            border-radius: 50%;
+            border-top-color: var(--primary-glow);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .archive-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .main-title {
+                font-size: 2.5em;
+            }
+            
+            .nav-container {
+                position: static;
+                text-align: center;
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .main-title {
+                font-size: 2em;
+            }
+            
+            .archive-subtitle {
+                font-size: 1.2em;
+            }
+            
+            .art-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background effects -->
+    <div class="starfield" id="starfield"></div>
+    <div class="scan-lines"></div>
+    
+    <!-- Header -->
+    <header class="archive-header">
+        <h1 class="main-title">SYKOSYBER</h1>
+        <h2 class="archive-subtitle">// CREATIVE ARCHIVES //</h2>
+    </header>
+    
+    <!-- Navigation -->
+    <nav class="nav-container">
+        <a href="index.html" class="exit-link">
+            <span>RETURN TO STATION BRIDGE</span>
+            <span>🚀</span>
+        </a>
+    </nav>
+    
+    <!-- Main content -->
+    <main class="archive-container">
+        <div class="archive-grid">
+            <!-- Code Column -->
+            <section class="archive-column code">
+                <h3 class="column-header code">// ENGINEERING SCHEMATICS //</h3>
+                
+                <article class="archive-item">
+                    <a href="https://github.com/sykosyber/MoralAI" class="project-link" target="_blank">
+                        <h4 class="project-title">Project: MoralAI Macro</h4>
+                        <p class="project-description">Macro utility allowing for easy copy-and-paste of 6 epistemological frameworks into any into any LLM dialogue box.</p>
+                        <div class="tech-stack">
+                            <span class="tech-tag">[Python]</span>
+                            <span class="tech-tag">[tkinter]</span>
+                        </div>
+                    </a>
+                </article>
+                
+                <article class="archive-item">
+                    <a href="https://github.com/sykosyber/Prismatic-Psychotool" class="project-link" target="_blank">
+                        <h4 class="project-title">Project: Prismatic Psychotool</h4>
+                        <p class="project-description">A web-based instrument for multi-dimensional analysis of human behavior and psychology. This tool uses OpenAI's GPT-4o to process text through a variety of selectable academic and theoretical lenses, providing deep, structured insights.</p>
+                        <div class="tech-stack">
+                            <span class="tech-tag">[HTML]</span>
+                            <span class="tech-tag">[Three.js]</span>
+                        </div>
+                    </a>
+                </article>
+                
+                <article class="archive-item">
+                    <a href="https://github.com/sykosyber/InformationAngel" class="project-link" target="_blank">
+                        <h4 class="project-title">Project: Information Angel</h4>
+                        <p class="project-description">Digital instrument for Wisdom contemplation</p>
+                        <div class="tech-stack">
+                            <span class="tech-tag">[HTML]</span>
+                            <span class="tech-tag">[Three.js]</span>
+                        </div>
+                    </a>
+                </article>
+                
+                <article class="archive-item">
+                    <a href="https://github.com/sykosyber/Poetic-Pyrotechnics" class="project-link" target="_blank">
+                        <h4 class="project-title">Project: Poetic Pyrotechnics</h4>
+                        <p class="project-description">Poetic Pyrotechnics is an explosive, interactive digital art experience that obliterates the boundaries between poetry, visual art, and code. Inspired by the revolutionary spirits of Arthur Rimbaud, Marcel Duchamp (R. Mutt), and the Dadaist movement.</p>
+                        <div class="tech-stack">
+                            <span class="tech-tag">[HTML]</span>
+                            <span class="tech-tag">[JavaScript]</span>
+                            <span class="tech-tag">[Tone.js]</span>
+                        </div>
+                    </a>
+                </article>
+            </section>
+            
+            <!-- Words Column -->
+            <section class="archive-column words">
+                <h3 class="column-header words">// ARCHIVED TRANSMISSIONS //</h3>
+                
+                <article class="archive-item">
+                    <a href="archives/writings/AI Trial - The Murder of Meaning_ (1).pdf" class="project-link" target="_blank">
+                        <h4 class="project-title">Transmission: AI Trial - Murder of Meaning </h4>
+                        <p class="article-source">Source: PDF</p>
+                        <p class="article-date">Stardate: 2024.08.03</p>
+                        <p class="article-excerpt">"In a world of simulations, has meaning survived?"</p>
+                    </a>
+                </article>
+                
+                <article class="archive-item">
+                    <a href="archives/writings/The Last Jest.pdf" class="project-link" target="_blank">
+                        <h4 class="project-title">Transmission: The Last Jest</h4>
+                        <p class="article-source">Source: PDF</p>
+                        <p class="article-date">Stardate: 2025.02.15</p>
+                        <p class="article-excerpt">"A parody of a parody of a parody"</p>
+                    </a>
+                </article>
+                
+                <article class="archive-item">
+                    <a href="archives/writings/_abstract_ .pdf" class="project-link" target="_blank">
+                        <h4 class="project-title">Transmission: 4BSR4CT</h4>
+                        <p class="article-source">Source: PDF</p>
+                        <p class="article-date">Stardate: 2025.03.10</p>
+                        <p class="article-excerpt">"How far can one push language before it breaks?"</p>
+                    </a>
+                </article>
+
+                <article class="archive-item">
+                    <a href="archives/writings/ASCII Language_ A Theoretical Framework for Human-Computer Interaction.pdf" class="project-link" target="_blank">
+                        <h4 class="project-title">Transmission: ASCII: Towards an Ambient Machine Language</h4>
+                        <p class="article-source">Source: PDF</p>
+                        <p class="article-date">Stardate: 2025.04.22</p>
+                        <p class="article-excerpt">"Exploring the capabilities of large-language models to express concepts and art through ASCII."</p>
+                    </a>
+                </article>
+
+                <article class="archive-item">
+                    <a href="archives/writings/Koan of SykoSyber.pdf" class="project-link" target="_blank">
+                        <h4 class="project-title">Transmission: Koan of SykoSyber</h4>
+                        <p class="article-source">Source: PDF</p>
+                        <p class="article-date">Stardate: 2025.06.22</p>
+                        <p class="article-excerpt">"The song of a sailor of digital seas."</p>
+                    </a>
+                </article>
+            </section>
+            
+            <!-- Art Column -->
+            <section class="archive-column art">
+                <h3 class="column-header art">// VISUAL DATA CAPTURES //</h3>
+                
+               <div class="art-grid">
+    
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/Headspace-he4dsp4ce-1167424959" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb1yv3-d994708e-badf-45e9-8ba4-165ccf6ba8e9.jpg/v1/fit/w_828,h_992,q_70,strp/headspace___he4dsp4ce_by_sykosyber_djb1yv3-414w-2x.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMXl2My1kOTk0NzA4ZS1iYWRmLTQ1ZTktOGJhNC0xNjVjY2Y2YmE4ZTkuanBnIiwiaGVpZ2h0IjoiPD0xNTMzIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uud2F0ZXJtYXJrIl0sIndtayI6eyJwYXRoIjoiXC93bVwvNWExNDVjZjktYTliZC00YWNlLTg3MWEtZDdhOGNiYTcyY2I2XC9zeWtvc3liZXItNC5wbmciLCJvcGFjaXR5Ijo5NSwicHJvcG9ydGlvbnMiOjAuNDUsImdyYXZpdHkiOiJjZW50ZXIifX0.nvCd05XjlTMKcJewBcIZh8W7zrr-GTTQ6eE4kD1ZYLM" alt="headspace">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">Headspace / he4dsp4ce</p>
+                </a>
+                
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/a-colorful-splash-1168269185" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djbk29t-5b63f31b-57a2-4f9b-893f-8639d5e21c15.jpg/v1/fill/w_840,h_951,q_70,strp/a_colorful_splash__by_sykosyber_djbk29t-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTQ1MCIsInBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiazI5dC01YjYzZjMxYi01N2EyLTRmOWItODkzZi04NjM5ZDVlMjFjMTUuanBnIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.3scSpBLpCrVnkWASPG4ilTMjCPzq6jkg04mJrw-zXCg" alt="A Colorful Splash">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">A Colorful Splash</p>
+                </a>
+                
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/powerlines-1167427771" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb2117-509a85c6-716b-4ece-bcac-63aa30ffd5d1.png/v1/fill/w_914,h_874,q_70,strp/powerlines_by_sykosyber_djb2117-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTExOSIsInBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMjExNy01MDlhODVjNi03MTZiLTRlY2UtYmNhYy02M2FhMzBmZmQ1ZDEucG5nIiwid2lkdGgiOiI8PTExNzAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.JVGcmOTUnDRHvdkgAK-jUe9OiCzHXqtyVeafatmuCtY" alt="Powerlines">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">Powerlines</p>
+                </a>
+                
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/a-strange-panorama-1167437684" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb28ok-46e33066-3a2e-4ca9-9c11-fbf0171b57d8.jpg/v1/fill/w_974,h_821,q_70,strp/a_strange_panorama_by_sykosyber_djb28ok-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTA3OSIsInBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMjhvay00NmUzMzA2Ni0zYTJlLTRjYTktOWMxMS1mYmYwMTcxYjU3ZDguanBnIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.n2iEc9RQsF8a7sqzkVEaxMab9xBbw33y4uDOqWHxiGw" alt="A Strange Panorama">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">A Strange Panorama</p>
+                </a>
+                
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/Shadows-on-the-Mountain-1167442926" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb2cq6-eb3dad34-3c8c-4b49-9691-5498bfc06ff6.jpg/v1/fill/w_1034,h_773,q_70,strp/shadows_on_the_mountain_by_sykosyber_djb2cq6-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9OTU3IiwicGF0aCI6IlwvZlwvNWExNDVjZjktYTliZC00YWNlLTg3MWEtZDdhOGNiYTcyY2I2XC9kamIyY3E2LWViM2RhZDM0LTNjOGMtNGI0OS05NjkxLTU0OThiZmMwNmZmNi5qcGciLCJ3aWR0aCI6Ijw9MTI4MCJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.I9MEMbLuoh-kJ3bzgoP4XolO3DtbZYcIjFPcmdZu_M8" alt="Shadows on the Mountain">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">Shadows on the Mountain</p>
+                </a>
+                
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/The-Last-Knight-1167426617" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb2055-3bbaf482-e1f6-4f2b-88c6-83f7de53bf20.jpg/v1/fit/w_828,h_1142,q_70,strp/the_last_knight__by_sykosyber_djb2055-414w-2x.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMjA1NS0zYmJhZjQ4Mi1lMWY2LTRmMmItODhjNi04M2Y3ZGU1M2JmMjAuanBnIiwiaGVpZ2h0IjoiPD0xNzY0Iiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uud2F0ZXJtYXJrIl0sIndtayI6eyJwYXRoIjoiXC93bVwvNWExNDVjZjktYTliZC00YWNlLTg3MWEtZDdhOGNiYTcyY2I2XC9zeWtvc3liZXItNC5wbmciLCJvcGFjaXR5Ijo5NSwicHJvcG9ydGlvbnMiOjAuNDUsImdyYXZpdHkiOiJjZW50ZXIifX0.OVgjDO78Nwxy8-GPTiSbGLJX53EfJMYpxmPfmMi4OSc" alt="The Last Knight">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">The Last Knight</p>
+                </a>
+
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/Red-Jaguar-Sun-1167430738" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb23bm-dc80a76d-d1a3-4690-9d1d-baf39af61771.jpg/v1/fill/w_839,h_953,q_70,strp/red_jaguar_sun_by_sykosyber_djb23bm-pre.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MjY2OSIsInBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMjNibS1kYzgwYTc2ZC1kMWEzLTQ2OTAtOWQxZC1iYWYzOWFmNjE3NzEuanBnIiwid2lkdGgiOiI8PTIzNDkifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.1BxFRfV1aR5ztg1Rabf8z9kAGCVhvz__R6wEWDH-xJo" alt="Red Jaguar Sun">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">Red Jaguar Sun</p>
+                </a>
+
+                <a class="art-thumbnail" href="https://www.deviantart.com/sykosyber/art/Lemonade-Spring-1167436006" target="_blank">
+                    <img src="https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5a145cf9-a9bd-4ace-871a-d7a8cba72cb6/djb27dy-e806ff32-e0d8-487f-957a-51bbb65367c1.jpg/v1/fit/w_828,h_1016,q_70,strp/lemonade_spring_by_sykosyber_djb27dy-414w-2x.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTE0OSIsInBhdGgiOiJcL2ZcLzVhMTQ1Y2Y5LWE5YmQtNGFjZS04NzFhLWQ3YThjYmE3MmNiNlwvZGpiMjdkeS1lODA2ZmYzMi1lMGQ4LTQ4N2YtOTU3YS01MWJiYjY1MzY3YzEuanBnIiwid2lkdGgiOiI8PTkzNiJ9XV0sImF1ZCI6WyJ1cm46c2VydmljZTppbWFnZS5vcGVyYXRpb25zIl19.Jet4Bim_8OXDZfyynr9AXZjOvd2niKrkYhm3ef1cadY" alt="Lemonade Spring">
+                    <div class="art-overlay"></div>
+                    <p class="art-title">Lemonade Spring</p>
+                </a>
+                
+            </div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" onclick="closeLightbox()">×</button>
+            <img id="lightboxImage" class="lightbox-image" src="" alt="">
+            <div class="lightbox-info">
+                <div>Image ID: <span id="imageId"></span></div>
+                <div>Resolution: <span id="imageResolution"></span></div>
+                <div>Medium: <span id="imageMedium"></span></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Create starfield
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            const starCount = 200;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 4 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                starfield.appendChild(star);
+            }
+        }
+        
+        // Initialize starfield
+        createStarfield();
+        
+        // Lightbox functionality
+        function openLightbox(title, id, resolution, medium, imageSrc) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightboxImage');
+            const imageId = document.getElementById('imageId');
+            const imageResolution = document.getElementById('imageResolution');
+            const imageMedium = document.getElementById('imageMedium');
+            
+            lightboxImage.src = imageSrc;
+            lightboxImage.alt = title;
+            imageId.textContent = id;
+            imageResolution.textContent = resolution;
+            imageMedium.textContent = medium;
+            
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Play sound effect if available
+            playSound(800, 100);
+        }
+        
+        function closeLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            
+            // Play sound effect
+            playSound(400, 100);
+        }
+        
+        // Close lightbox on background click
+        document.getElementById('lightbox').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeLightbox();
+            }
+        });
+        
+        // Close lightbox on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+        
+        // Simple sound effects
+        let audioContext = null;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playSound(frequency = 440, duration = 100) {
+            initAudio();
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+        
+        // Add hover sound effects to all interactive elements
+        document.querySelectorAll('.archive-item, .art-thumbnail, .exit-link').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                playSound(600, 50);
+            });
+        });
+        
+        // Add click sound to archive items
+        document.querySelectorAll('.archive-item').forEach(item => {
+            item.addEventListener('click', function() {
+                playSound(1000, 100);
+            });
+        });
+        
+        // Add staggered load animation to items
+        function animateItems() {
+            const items = document.querySelectorAll('.archive-item, .art-thumbnail');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        }
+        
+        // Initialize animations
+        window.addEventListener('load', function() {
+            animateItems();
+            
+            // Play initialization sound
+            setTimeout(() => {
+                playSound(400, 100);
+                setTimeout(() => playSound(600, 100), 150);
+                setTimeout(() => playSound(800, 100), 300);
+            }, 500);
+        });
+        
+        // Add glitch effect on hover for column headers
+        document.querySelectorAll('.column-header').forEach(header => {
+            header.addEventListener('mouseenter', function() {
+                this.style.animation = 'glitch 0.3s';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 300);
+            });
+        });
+        
+        // Add glitch animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes glitch {
+                0%, 100% { transform: translate(0); }
+                20% { transform: translate(-2px, 2px); }
+                40% { transform: translate(-2px, -2px); }
+                60% { transform: translate(2px, 2px); }
+                80% { transform: translate(2px, -2px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Console easter egg
+        console.log('%c SYKOSYBER CREATIVE ARCHIVES ', 'background: #87ceeb; color: #0d1b2a; font-size: 20px; font-weight: bold; padding: 10px;');
+        console.log('%c Access Level: COMMANDER ', 'color: #51cf66; font-size: 14px;');
+        console.log('%c Browse the archives. Every creation tells a story. ', 'color: #b8860b; font-style: italic;');
+    </script>
+</body>
+</html>
